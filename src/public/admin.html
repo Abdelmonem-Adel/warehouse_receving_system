@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة المدير (Admin)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+        body { font-family: 'Cairo', sans-serif; background-color: #f3f4f6; }
+    </style>
+</head>
+<body class="p-6">
+    <header class="flex justify-between items-center mb-6 bg-white p-4 rounded shadow">
+        <h1 class="text-2xl font-bold text-gray-800">🛠️ لوحة المدير</h1>
+        <a href="index.html" onclick="localStorage.clear()" class="text-red-500 font-bold">تسجيل خروج</a>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Create/Edit User -->
+        <div class="bg-white p-6 rounded shadow h-fit">
+            <h2 class="text-xl font-bold mb-4" id="formTitle">اضافة مستخدم جديد</h2>
+            <form id="userForm" class="space-y-4">
+                <input type="hidden" id="userId">
+                <input type="text" id="name" placeholder="الاسم الكامل" class="w-full p-2 border rounded" required>
+                <input type="text" id="username" placeholder="اسم المستخدم" class="w-full p-2 border rounded" required>
+                <input type="password" id="password" placeholder="كلمة المرور" class="w-full p-2 border rounded">
+                <select id="role" class="w-full p-2 border rounded" required>
+                    <option value="storekeeper">أمين مخزن (Storekeeper)</option>
+                    <option value="supervisor">مشرف (Supervisor)</option>
+                    <option value="gate">موظف بوابة (Gate)</option>
+                </select>
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700" id="submitBtn">إضافة</button>
+                    <button type="button" onclick="resetForm()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded font-bold hidden" id="cancelBtn">إلغاء</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Users List -->
+        <div class="bg-white p-6 rounded shadow">
+            <h2 class="text-xl font-bold mb-4">المستخدمين المسجلين</h2>
+            <div class="overflow-y-auto max-h-[70vh]">
+                <table class="w-full text-right">
+                    <thead>
+                        <tr class="bg-gray-100 border-b">
+                            <th class="p-2">الاسم</th>
+                            <th class="p-2">Role</th>
+                            <th class="p-2">Status</th>
+                            <th class="p-2">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isEditing = false;
+
+        async function fetchUsers() {
+            const res = await fetch('/api/users');
+            const users = await res.json();
+            const tbody = document.getElementById('usersList');
+            tbody.innerHTML = users.map(u => `
+                <tr class="border-b transition hover:bg-gray-50">
+                    <td class="p-2">
+                        <div class="font-bold">${u.name}</div>
+                        <div class="text-xs text-gray-500">@${u.username}</div>
+                    </td>
+                    <td class="p-2"><span class="bg-gray-200 px-2 rounded text-xs">${u.role}</span></td>
+                    <td class="p-2 text-sm">${u.status || '-'}</td>
+                    <td class="p-2 flex gap-2">
+                        <button onclick='editUser(${JSON.stringify(u)})' class="text-blue-500 hover:text-blue-700 font-bold text-sm">تعديل</button>
+                        <button onclick="deleteUser('${u._id}')" class="text-red-500 hover:text-red-700 font-bold text-sm">حذف</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function editUser(user) {
+            isEditing = true;
+            document.getElementById('formTitle').innerText = 'تعديل بيانات المستخدم';
+            document.getElementById('submitBtn').innerText = 'حفظ التعديلات';
+            document.getElementById('cancelBtn').classList.remove('hidden');
+            
+            document.getElementById('userId').value = user._id;
+            document.getElementById('name').value = user.name;
+            document.getElementById('username').value = user.username;
+            document.getElementById('password').value = ''; // Don't show password
+            document.getElementById('role').value = user.role;
+        }
+
+        function resetForm() {
+            isEditing = false;
+            document.getElementById('formTitle').innerText = 'اضافة مستخدم جديد';
+            document.getElementById('submitBtn').innerText = 'إضافة';
+            document.getElementById('cancelBtn').classList.add('hidden');
+            document.getElementById('userForm').reset();
+            document.getElementById('userId').value = '';
+        }
+
+        async function deleteUser(id) {
+            if(!confirm('هل أنت متأكد من الحذف النهائي؟')) return;
+            try {
+                await fetch('/api/users/' + id, { method: 'DELETE' });
+                fetchUsers();
+            } catch (e) { console.error(e); }
+        }
+
+        document.getElementById('userForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('userId').value;
+            const data = {
+                name: document.getElementById('name').value,
+                username: document.getElementById('username').value,
+                role: document.getElementById('role').value,
+            };
+            const pwd = document.getElementById('password').value;
+            if(pwd) data.password = pwd;
+
+            try {
+                if(isEditing) {
+                    await fetch('/api/users/' + id, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    await fetch('/api/users', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                }
+                resetForm();
+                fetchUsers();
+            } catch (err) {
+                alert('Error');
+            }
+        });
+
+        // Auto Refresh Users List?
+        fetchUsers();
+        setInterval(fetchUsers, 5000);
+    </script>
+</body>
+</html>

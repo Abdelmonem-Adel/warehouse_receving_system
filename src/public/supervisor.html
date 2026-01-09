@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة المشرف (V5)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style type="text/tailwindcss">
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+        body { font-family: 'Cairo', sans-serif; background-color: #f3f4f6; }
+        .badge { @apply px-2 py-1 rounded text-xs font-bold; }
+        .badge-wait { @apply bg-yellow-100 text-yellow-700; }
+        .badge-active { @apply bg-green-100 text-green-700; }
+        .badge-done { @apply bg-gray-100 text-gray-700; }
+    </style>
+</head>
+<body class="p-4">
+    <header class="flex justify-between items-center mb-6 bg-white p-3 rounded shadow">
+        <h1 class="text-xl font-bold text-gray-800">👀 لوحة المشرف الشاملة</h1>
+        <div class="space-x-4 space-x-reverse">
+            <button onclick="toggleManualModal()" class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded font-bold hover:bg-yellow-200">🔧 تعيين يدوي</button>
+            <button onclick="fetchData()" class="text-blue-600 font-bold text-sm">تحديث الحالات</button>
+            <a href="index.html" onclick="localStorage.clear()" class="text-red-500 font-bold text-sm">خروج</a>
+        </div>
+    </header>
+
+    <!-- Manual Assignment Modal -->
+    <div id="manualModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded shadow-lg w-96 relative">
+            <button onclick="toggleManualModal()" class="absolute top-2 left-2 text-gray-500 hover:text-red-500">✕</button>
+            <h2 class="text-xl font-bold mb-4">تعيين يدوي (Override)</h2>
+            <form id="assignForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium">1. اختر الشركة (من الانتظار)</label>
+                    <select id="companySelect" class="w-full p-2 border rounded" required></select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium">2. اختر الرصيف</label>
+                    <select id="dockSelect" class="w-full p-2 border rounded" required></select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium">3. اختر أمين المخزن</label>
+                    <select id="skSelectManual" class="w-full p-2 border rounded" required></select>
+                </div>
+                <button type="submit" class="w-full bg-yellow-600 text-white py-2 rounded font-bold hover:bg-yellow-700">تأكيد التعيين</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Transfer Modal -->
+    <div id="transferModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded shadow-lg w-96 relative">
+            <button onclick="toggleTransferModal()" class="absolute top-2 left-2 text-gray-500 hover:text-red-500">✕</button>
+            <h2 class="text-xl font-bold mb-4">🔁 نقل/إعادة تعيين (Transfer)</h2>
+            <p class="text-sm text-gray-500 mb-4">سيتم إلغاء المهمة من الأمين الحالي ونقلها للجديد.</p>
+            <form id="transferForm" class="space-y-4">
+                <input type="hidden" id="transInfo" disabled class="w-full bg-gray-100 p-2 text-sm mb-2 rounded">
+                <input type="hidden" id="transCompanyId">
+                <div>
+                    <label class="block text-sm font-medium">1. اختر الرصيف الجديد (اختياري)</label>
+                    <select id="transDockSelect" class="w-full p-2 border rounded" required></select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium">2. اختر أمين المخزن الجديد</label>
+                    <select id="transSkSelect" class="w-full p-2 border rounded" required></select>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700">تنفيذ النقل</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        
+        <!-- Left Column: Priority Manager -->
+        <div class="lg:col-span-1 bg-white p-4 rounded shadow h-[85vh] overflow-y-auto">
+            <h2 class="text-lg font-bold mb-4 border-b pb-2">📋 ترتيب الأمناء (Priority)</h2>
+            <div id="skList" class="space-y-2">
+                <!-- Loaded Dynamically -->
+            </div>
+            <button onclick="saveOrder()" class="w-full mt-4 bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700">حفظ الترتيب الجديد</button>
+        </div>
+
+        <!-- Right Column: Company Tracking -->
+        <div class="lg:col-span-3 space-y-4">
+            
+            <!-- Active Jobs -->
+            <div class="bg-white p-4 rounded shadow">
+                <h2 class="text-lg font-bold mb-2">⚡ جاري الاستلام (Active)</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-sm">
+                        <thead class="bg-gray-50">
+                             <tr>
+                                 <th class="p-2">الشركة</th>
+                                 <th class="p-2">الرصيف (Dock)</th>
+                                 <th class="p-2">أمين المخزن</th>
+                                 <th class="p-2">اجراءات</th>
+                             </tr>
+                        </thead>
+                        <tbody id="activeList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Waiting Queue -->
+            <div class="bg-white p-4 rounded shadow">
+                <h2 class="text-lg font-bold mb-2">⏳ الانتظار (Queue)</h2>
+                 <div class="overflow-x-auto">
+                    <table class="w-full text-right text-sm">
+                        <thead class="bg-gray-50">
+                             <tr>
+                                 <th class="p-2">#</th>
+                                 <th class="p-2">الشركة</th>
+                                 <th class="p-2">رصيف مفضل</th>
+                                 <th class="p-2">وقت الوصول</th>
+                             </tr>
+                        </thead>
+                        <tbody id="waitingList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Recently Finished -->
+            <div class="bg-white p-4 rounded shadow">
+                <h2 class="text-lg font-bold mb-2">✅ تم الانتهاء (Recent History)</h2>
+                 <div class="overflow-x-auto">
+                    <table class="w-full text-right text-sm">
+                        <thead class="bg-gray-50">
+                             <tr>
+                                 <th class="p-2">الشركة</th>
+                                 <th class="p-2">الرصيف</th>
+                                 <th class="p-2">أمين المخزن</th>
+                                 <th class="p-2">وقت الانتهاء</th>
+                             </tr>
+                        </thead>
+                        <tbody id="historyList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let isEditingOrder = false;
+        let docks = [];
+        let storekeepers = [];
+        const supervisorName = localStorage.getItem('user_name') || 'Unknown';
+
+        async function fetchData() {
+            const [histRes, skRes, dockRes] = await Promise.all([
+                fetch('/api/history'),
+                fetch('/api/storekeepers'),
+                fetch('/api/docks')
+            ]);
+            
+            const history = await histRes.json();
+            const serverSKs = await skRes.json();
+            docks = await dockRes.json();
+            
+            renderActive(history.receiving);
+            renderWaiting(history.waiting);
+            renderHistory(history.finished);
+            updateDropdowns(history.waiting, docks, serverSKs);
+
+            if (!isEditingOrder) {
+                storekeepers = serverSKs;
+                renderSKOrder();
+            }
+        }
+
+        function updateDropdowns(waiting, docks, sks) {
+             const cSelect = document.getElementById('companySelect');
+             if (waiting.length === 0) {
+                 cSelect.innerHTML = '<option value="">لا يوجد شركات في الانتظار</option>';
+             } else {
+                 const val = cSelect.value;
+                 cSelect.innerHTML = waiting.map(c => `<option value="${c._id}">${c.companyName}</option>`).join('');
+                 if(val) cSelect.value = val;
+             }
+
+             // Populate all dock/sk selects (assign + transfer)
+             const selects = ['dockSelect', 'transDockSelect'];
+             selects.forEach(id => {
+                 const el = document.getElementById(id);
+                 if(!el) return;
+                 const val = el.value;
+                 el.innerHTML = docks.map(d => `<option value="${d._id}">Dock ${d.number} (${d.status})</option>`).join('');
+                 if(val) el.value = val;
+             });
+
+             const skSelects = ['skSelectManual', 'transSkSelect'];
+             skSelects.forEach(id => {
+                 const el = document.getElementById(id);
+                 if(!el) return;
+                 const val = el.value;
+                 el.innerHTML = sks.map(s => `<option value="${s._id}">${s.name} (${s.status})</option>`).join('');
+                 if(val) el.value = val;
+             });
+        }
+
+        function renderActive(list) {
+            const el = document.getElementById('activeList');
+            if(list.length === 0) return el.innerHTML = '<tr><td colspan="4" class="p-2 text-center text-gray-500">لا يوجد عمليات حالية</td></tr>';
+            
+            el.innerHTML = list.map(i => `
+                <tr class="border-b">
+                    <td class="p-2 font-bold">${i.companyName}</td>
+                    <td class="p-2"><span class="badge badge-active">Dock ${i.dock.number}</span></td>
+                    <td class="p-2">${i.assignedStorekeeper ? i.assignedStorekeeper.name : '-'}</td>
+                    <td class="p-2">
+                        <button onclick='openTransfer(${JSON.stringify(i)})' class="text-blue-500 text-sm font-bold border border-blue-200 px-2 py-1 rounded hover:bg-blue-50">
+                            🔁 نقل (Reassign)
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // ... renderWaiting & renderHistory same as before ... 
+        function renderWaiting(list) {
+            const el = document.getElementById('waitingList');
+            if(list.length === 0) return el.innerHTML = '<tr><td colspan="4" class="p-2 text-center text-gray-500">لا يوجد انتظار</td></tr>';
+
+            el.innerHTML = list.map((i, idx) => `
+                <tr class="border-b bg-yellow-50">
+                    <td class="p-2">${idx + 1}</td>
+                    <td class="p-2 font-bold">${i.companyName}</td>
+                    <td class="p-2">${i.dock ? 'Dock '+i.dock.number : 'أي رصيف'}</td>
+                    <td class="p-2">${new Date(i.createdAt).toLocaleTimeString()}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderHistory(list) {
+            const el = document.getElementById('historyList');
+            el.innerHTML = list.slice(0, 5).map(i => `
+                <tr class="border-b">
+                    <td class="p-2">${i.companyName}</td>
+                    <td class="p-2">Dock ${i.dock ? i.dock.number : '?'}</td>
+                    <td class="p-2">${i.assignedStorekeeper ? i.assignedStorekeeper.name : '?'}</td>
+                    <td class="p-2 text-gray-500">${new Date(i.completedAt).toLocaleTimeString()}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderSKOrder() {
+            const el = document.getElementById('skList');
+            el.innerHTML = storekeepers.map((sk, index) => `
+                <div class="flex items-center justify-between bg-gray-50 p-2 rounded border" data-id="${sk._id}">
+                    <div>
+                        <span class="font-bold text-sm">${index + 1}. ${sk.name}</span>
+                        <div class="text-xs ${
+                            sk.status === 'available' ? 'text-green-500' : 
+                            sk.status === 'break' ? 'text-orange-500' : 'text-red-500'
+                        }">${
+                            sk.status === 'available' ? 'متاح' : 
+                            sk.status === 'break' ? 'استراحة' : 'مشغول'
+                        }</div>
+                    </div>
+                    <div class="flex flex-col">
+                        <button onclick="moveUp(${index})" class="text-gray-500 hover:text-blue-500">▲</button>
+                        <button onclick="moveDown(${index})" class="text-gray-500 hover:text-blue-500">▼</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.moveUp = (index) => { if (index === 0) return; isEditingOrder = true; [storekeepers[index], storekeepers[index-1]] = [storekeepers[index-1], storekeepers[index]]; renderSKOrder(); };
+        window.moveDown = (index) => { if (index === storekeepers.length - 1) return; isEditingOrder = true; [storekeepers[index], storekeepers[index+1]] = [storekeepers[index+1], storekeepers[index]]; renderSKOrder(); };
+
+        window.saveOrder = async () => {
+            const order = storekeepers.map(s => s._id);
+            try { 
+                const res = await fetch('/api/supervisor/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({order}) });
+                if(res.ok) { alert('تم تحديث الترتيب'); isEditingOrder = false; fetchData(); }
+            } catch(e) { console.error(e); }
+        };
+
+        window.toggleManualModal = () => document.getElementById('manualModal').classList.toggle('hidden');
+        window.toggleTransferModal = () => document.getElementById('transferModal').classList.toggle('hidden');
+
+        window.openTransfer = (job) => {
+            document.getElementById('transInfo').value = `نقل ${job.companyName} (الحالي: ${job.assignedStorekeeper?.name || 'Unknown'})`;
+            document.getElementById('transCompanyId').value = job._id;
+            
+            // Set current dock/sk as default selected
+            document.getElementById('transDockSelect').value = job.dock._id;
+            if(job.assignedStorekeeper) document.getElementById('transSkSelect').value = job.assignedStorekeeper._id;
+            
+            toggleTransferModal();
+        };
+
+        // Submit Manual Assign
+        document.getElementById('assignForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            // ... (Same logic as V3.1)
+            const d = { supervisorName, companyId: document.getElementById('companySelect').value, dockId: document.getElementById('dockSelect').value, storekeeperId: document.getElementById('skSelectManual').value };
+            await fetch('/api/supervisor/assign', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(d) });
+            alert('تم التعيين'); toggleManualModal(); fetchData();
+        });
+
+        // Submit Transfer
+        document.getElementById('transferForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const d = {
+                supervisorName,
+                companyId: document.getElementById('transCompanyId').value,
+                dockId: document.getElementById('transDockSelect').value,
+                storekeeperId: document.getElementById('transSkSelect').value
+            };
+            try {
+                const res = await fetch('/api/supervisor/transfer', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(d) });
+                if(res.ok) { alert('تم النقل بنجاح'); toggleTransferModal(); fetchData(); }
+                else alert('Error');
+            } catch(err) { console.error(err); }
+        });
+
+        fetchData();
+        setInterval(fetchData, 3000);
+    </script>
+</body>
+</html>
