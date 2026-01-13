@@ -6,16 +6,53 @@ import AuditLog from '../models/AuditLog.js';
 import { tryAssign, manualOverride } from '../services/assignmentService.js';
 import { getPublicKey } from '../services/notificationService.js';
 
-// Auth
+import jwt from 'jsonwebtoken';
+
 export const login = async (req, res) => {
-    const { username, password } = req.body;
-    const user = await User.findOne({ username });
-    
-    if (user && user.password === password) {
-        res.json(user);
-    } else {
-        res.status(401).json({ message: 'Invalid credentials' });
+
+
+    const username = req.body.username ? req.body.username.trim() : null;
+    const password = req.body.password ? req.body.password.trim() : null;
+
+    if (!username || !password) {
+        return res.status(400).json({ message: 'Missing credentials' });
     }
+
+    
+    const user = await User.findOne({ username });
+    console.log('DB USER FOUND:', user ? user.username : 'NULL');
+
+    if (!user) {
+        console.log('FAIL: User not found');
+        return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+   
+    if (String(user.password) !== String(password)) {
+        console.log('FAIL: Password mismatch');
+        return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    console.log('SUCCESS: Login valid');
+    const token = jwt.sign(
+        {
+          id: user._id,
+          role: user.role
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+    );
+
+    res.json({
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          role: user.role
+        }
+    });
+
+    
 };
 
 // Admin
@@ -31,7 +68,7 @@ export const createUser = async (req, res) => {
 export const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
-        // prevent update if plain password implementation causes issues? we just update fields sent
+        
         const updated = await User.findByIdAndUpdate(id, req.body, { new: true });
         res.json(updated);
     } catch (error) {
@@ -67,8 +104,7 @@ export const manualAssign = async (req, res) => {
 export const manualReassign = async (req, res) => {
     const { supervisorName, companyId, dockId, storekeeperId } = req.body;
     try {
-        // Check local import or export manualReassign? It's in assignmentService called transferJob
-        // I need to import transferJob first.
+        
         const { transferJob } = await import('../services/assignmentService.js');
         await transferJob(supervisorName, companyId, dockId, storekeeperId);
         res.json({ message: 'Job Re-assigned successfully' });
@@ -162,13 +198,7 @@ export const finishJob = async (req, res) => {
         }
 
         if (mode === 'dock_only') {
-            // Keep SK Busy (Conceptually). 
-            // In DB they are still 'busy'.
-            // They need to click "Available" (handled by setBreakStatus logic or similar?)
-            // Or we just leave them 'busy'.
-            // Storekeeper UI "Become Available" uses setBreakStatus('available') or similar?
-            // Wait, previous V3 logic relied on User seeing "Busy" screen and clicking "Become Available".
-            // We should reuse setBreakStatus('available') for that button logic now.
+           
         } else {
             sk.status = 'available';
             await sk.save();

@@ -8,9 +8,7 @@ export const tryAssign = async () => {
     try {
         console.log('Running Assignment Logic...');
 
-        // 1. Check if there are companies with PRE-ASSIGNED docks (manual gate selection) waiting
-        // Logic: specific query for this? 
-        // Actually, let's keep it simple. If status is waiting, we process.
+        
         
         const waitingCompanies = await Company.find({ status: 'waiting' }).sort({ createdAt: 1 });
         if (waitingCompanies.length === 0) return;
@@ -25,18 +23,14 @@ export const tryAssign = async () => {
                 if (preDock && preDock.status === 'available') {
                    selectedDock = preDock;
                 }
-                // If preDock is busy, we SKIP this company for now? Or do we assign to queue? 
-                // The prompt says "Gate: If all docks busy -> Queue".
-                // If Gate picked a dock but it's busy now (race condition?), it waits.
+                
             } else {
                 // Scenario B: No preference
                selectedDock = await Dock.findOne({ status: 'available' });
             }
 
-            if (!selectedDock) continue; // Try next company or wait
-
-            // Find Storekeeper
-            // Priority Order (lowest index first)
+            if (!selectedDock) continue; 
+            
             const freeSK = await User.findOne({ role: 'storekeeper', status: 'available' }).sort({ priorityIndex: 1 });
             
             if (!freeSK) {
@@ -49,8 +43,6 @@ export const tryAssign = async () => {
             // ASSIGN
             await executeAssignment(company, selectedDock, freeSK);
             
-            // Should restarting to ensure fair order? 
-            // Loop continues for next pairs
         }
 
     } catch (e) {
@@ -95,14 +87,9 @@ export const manualOverride = async (supervisorName, companyId, dockId, storekee
         details: `Assigned ${company.companyName} to Dock ${dock.number} & SK ${sk.name}`
     });
 
-    // If current occupants exist? Assuming Supervisor handles cleanup or "Inject" logic.
-    // For MVP, we aggressively overwrite statuses. 
-    // If Dock was busy:
+    
     if (dock.status === 'busy' && dock.currentShipment) {
-        // Warning: This effectively kicks out the previous shipment? 
-        // Let's assume Supervisor knows what they are doing (e.g. empty dock marked busy by error)
-        // ideally we should clear the old shipment?
-        // Let's just update.
+        
     }
 
     await executeAssignment(company, dock, sk);
@@ -119,7 +106,7 @@ export const transferJob = async (supervisorName, companyId, newDockId, newSkId)
     if (oldSkId && oldSkId.toString() !== newSkId) {
         const oldSk = await User.findById(oldSkId);
         if(oldSk) {
-            oldSk.status = 'available'; // Set free? Or busy? "Available" per requirement logic
+            oldSk.status = 'available'; 
             await oldSk.save();
             await sendNotification(oldSk._id, {
                 title: '❌ تم إلغاء المهمة',
@@ -151,7 +138,5 @@ export const transferJob = async (supervisorName, companyId, newDockId, newSkId)
 
     await executeAssignment(company, newDock, newSk);
     
-    // Explicit Notification for New SK is handled inside executeAssignment ("دورك جه")
-    // If we want specific "New Assignment Transferred" text, we'd need to modify executeAssignment or send manual msg here.
-    // executeAssignment sends "Company X on Dock Y". That is sufficient/correct.
+    
 };
