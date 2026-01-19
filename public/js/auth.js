@@ -3,12 +3,12 @@ const USER_KEY = 'user';
 
 // Get Token
 function getToken() {
-    return sessionStorage.getItem(AUTH_KEY);
+    return localStorage.getItem(AUTH_KEY);
 }
 
 // Get User Object
 function getUser() {
-    const userStr = sessionStorage.getItem(USER_KEY);
+    const userStr = localStorage.getItem(USER_KEY);
     try {
         return userStr ? JSON.parse(userStr) : null;
     } catch (e) {
@@ -25,8 +25,8 @@ function isLoggedIn() {
 
 // Logout
 function logout() {
-    sessionStorage.removeItem(AUTH_KEY);
-    sessionStorage.removeItem(USER_KEY);
+    localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem(USER_KEY);
     window.location.href = '/index.html';
 }
 

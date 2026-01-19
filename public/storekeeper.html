@@ -1,8 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="./images/icons8-storekeeper-96.png">
     <title>لوحة أمين المخزن</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -63,12 +65,7 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <button onclick="finishJob('full')" class="bg-[#00A651] text-white py-3 rounded-lg font-bold hover:bg-[#008f45] transition shadow">
-                        ✅ تم الانتهاء <br><span class="text-xs font-normal opacity-80">(الدوك فاضي + أنا متاح)</span>
-                    </button>
-                    <button onclick="finishJob('dock_only')" class="bg-yellow-500 text-white py-3 rounded-lg font-bold hover:bg-yellow-600 transition shadow">
-                         🚧 الدوك فاضي فقط <br><span class="text-xs font-normal opacity-80">(الدوك فاضي + أنا مشغول)</span>
-                    </button>
+                    <!-- Injected via JS -->
                 </div>
             </div>
         </div>
@@ -78,7 +75,8 @@
              <div class="text-6xl mb-4">🖐️</div>
              <h2 class="text-2xl font-bold text-red-500">أنت في حالة مشغول</h2>
              <p class="text-gray-500 mt-2">لقد قمت بتحرير الدوك ولكن لم تنهي عملك بعد.</p>
-             <button onclick="toggleBreak('available')" class="mt-6 bg-green-500 text-white px-6 py-2 rounded font-bold">العودة للعمل (Available)</button>
+             <button onclick="resumeWork()" class="mt-6 bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">▶️ Resume Work (busy)</button>
+             <button onclick="toggleBreak('available')" class="mt-2 block mx-auto bg-green-100 text-green-700 px-4 py-1 rounded hover:bg-green-200">العودة للعمل (Available)</button>
         </div>
     </div>
 
@@ -142,6 +140,8 @@
                         method: 'POST',
                         body: JSON.stringify({ storekeeperId: skId, subscription })
                     });
+                     
+
                     notifyBtn.classList.add('hidden');
                 } catch (e) { }
             }
@@ -178,9 +178,40 @@
                 
                 if (job) {
                     workDiv.classList.remove('hidden');
-                    document.getElementById('dockNumber').innerText = job.dock.number;
+                    
+                    // Handle Dock Display
+                    const dockEl = document.getElementById('dockNumber');
+                    if (job.dock) {
+                        dockEl.innerText = job.dock.number;
+                        dockEl.className = 'text-4xl font-bold text-gray-800 mb-6';
+                    } else {
+                        dockEl.innerText = 'تم تحرير الدوك';
+                        dockEl.className = 'text-2xl font-bold text-orange-600 mb-6';
+                    }
+
                     document.getElementById('companyName').innerText = job.companyName;
                     document.getElementById('invoiceNumber').innerText = job.invoiceNumber;
+
+                    // Handle Buttons
+                    const btnContainer = document.querySelector('#workingState .grid');
+                    if (job.dock) {
+                         btnContainer.innerHTML = `
+                            <button onclick="finishJob('full')" class="bg-[#00A651] text-white py-3 rounded-lg font-bold hover:bg-[#008f45] transition shadow">
+                                ✅ تم الانتهاء <br><span class="text-xs font-normal opacity-80">(الدوك فاضي + أنا متاح)</span>
+                            </button>
+                            <button onclick="finishJob('dock_only')" class="bg-yellow-500 text-white py-3 rounded-lg font-bold hover:bg-yellow-600 transition shadow">
+                                 🚧 الدوك فاضي فقط <br><span class="text-xs font-normal opacity-80">(الدوك فاضي + أنا مشغول)</span>
+                            </button>
+                        `;
+                    } else {
+                        // Dock already released
+                         btnContainer.innerHTML = `
+                            <button onclick="finishJob('full')" class="col-span-2 bg-[#00A651] text-white py-3 rounded-lg font-bold hover:bg-[#008f45] transition shadow">
+                                ✅ إنهاء الاستلام بالكامل <br><span class="text-xs font-normal opacity-80">(أنا متاح)</span>
+                            </button>
+                        `;
+                    }
+
                 } else {
                     busyIdleDiv.classList.remove('hidden');
                 }
@@ -200,16 +231,81 @@
             }
         };
 
-        window.toggleBreak = async (status) => {
-            try {
-                const res = await auth.fetchWithAuth(`/api/storekeepers/${skId}/status`, {
-                    method: 'POST',
-                    body: JSON.stringify({ status })
-                });
-                if(res && res.ok) fetchStatus();
-                else alert('Error updating status');
-            } catch (e) { console.error(e); }
-        };
+
+        window.finishJob = async (mode) => {
+  if (!confirm('هل أنت متأكد؟')) return;
+
+  try {
+    await auth.fetchWithAuth(`/api/storekeepers/${skId}/finish`, { 
+      method: 'POST',
+      body: JSON.stringify({ mode })
+    });
+
+    fetchStatus(); // نجاح فعلي
+  } catch (err) {
+    alert(err.message || 'فشل إنهاء الاستلام');
+  }
+};
+
+
+// window.toggleBreak = async (status) => {
+//   try {
+//     await auth.fetchWithAuth(`/api/storekeepers/${skId}/status`, {
+//       method: 'POST',
+//       body: JSON.stringify({ status })
+//     });
+
+//     fetchStatus(); // طالما مجاش Error يبقى تمام
+//   } catch (e) {
+//     alert(e.message || 'Error updating status');
+//   }
+// };
+
+
+window.toggleBreak = async (status) => {
+    // status is 'break' or 'available'
+    try {
+        const res = await auth.fetchWithAuth(`/api/storekeepers/${skId}/status`, {
+            method: 'POST',
+            body: JSON.stringify({ status })
+        });
+        if(res && res.ok) {
+            fetchStatus();
+        } else {
+            const d = await res.json();
+            alert(d.message || 'Error updating status');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Network Error');
+    }
+};
+
+window.resumeWork = async () => {
+    try {
+        const res = await auth.fetchWithAuth(`/api/storekeepers/${skId}/resume`, { method: 'POST' });
+        if(res && res.ok) {
+            // Status updated to busy.
+            fetchStatus();
+        } else {
+             const err = await res.json();
+             alert('Error resuming: ' + (err.message || res.statusText));
+        }
+    } catch(e) { console.error(e); alert('Network Error'); }
+};
+
+
+
+        // window.toggleBreak = async (status) => {
+        //     try {
+        //         const res = await auth.fetchWithAuth(`/api/storekeepers/${skId}/status`, {
+        //             method: 'POST',
+        //             body: JSON.stringify({ status })
+        //         });
+        //         if(res && res.ok) fetchStatus();
+        //         else alert('Error updating status');
+        //     } catch (e) { console.error(e); }
+        // };
 
         // fetchStatus moved to onload
         setInterval(() => {

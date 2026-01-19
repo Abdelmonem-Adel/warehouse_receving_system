@@ -1,7 +1,6 @@
 import webpush from 'web-push';
 import PushSubscription from '../models/PushSubscription.js';
 import fs from 'fs';
-import { log } from 'console';
 
 import 'dotenv/config';
 
@@ -34,6 +33,7 @@ try {
 } catch (error) {
     console.warn('Warning: VAPID Keys not found. Set VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY in .env or ensure keys.json exists.');
 }
+
 
 export const sendNotification = async (storekeeperId, payload) => {
     try {

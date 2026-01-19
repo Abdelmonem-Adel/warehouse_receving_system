@@ -8,6 +8,7 @@ const userSchema = mongoose.Schema({
     
     // Storekeeper specific fields
     status: { type: String, enum: ['available', 'busy', 'break'], default: 'available' },
+    onBreak: { type: Boolean, default: false },
     lastTurnAt: { type: Date, default: new Date(0) },
     priorityIndex: { type: Number, default: 999 } // Low priority default
 }, { timestamps: true });

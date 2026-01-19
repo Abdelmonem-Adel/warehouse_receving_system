@@ -130,6 +130,7 @@
                                  <th class="p-2">الشركة</th>
                                  <th class="p-2">الرصيف</th>
                                  <th class="p-2">أمين المخزن</th>
+                                 <th class="p-2">وقت البدء</th>
                                  <th class="p-2">وقت الانتهاء</th>
                              </tr>
                         </thead>
@@ -246,7 +247,8 @@
                     <td class="p-2">${i.companyName}</td>
                     <td class="p-2">Dock ${i.dock ? i.dock.number : '?'}</td>
                     <td class="p-2">${i.assignedStorekeeper ? i.assignedStorekeeper.name : '?'}</td>
-                    <td class="p-2 text-gray-500">${new Date(i.completedAt).toLocaleTimeString()}</td>
+                    <td class="p-2">${i.startedAt ? new Date(i.startedAt).toLocaleString() : 'لم يبدأ'}</td>
+                    <td class="p-2 text-gray-500">${i.finishedAt ? new Date(i.finishedAt).toLocaleString() : (i.completedAt ? new Date(i.completedAt).toLocaleTimeString() : '-')}</td>
                 </tr>
             `).join('');
         }

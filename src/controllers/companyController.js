@@ -9,7 +9,8 @@ export const registerCompany = async (req, res) => {
             invoiceNumber,
             invoiceImage,
             status: 'waiting',
-            dock: dockId || null 
+            dock: dockId || null,
+            startedAt: dockId ? new Date() : null
         });
         
         await tryAssign();

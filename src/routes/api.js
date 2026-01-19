@@ -14,7 +14,8 @@ import {
     getStorekeeperStatus, 
     setBreakStatus,
     finishJob, 
-    subscribePush 
+    subscribePush,
+    resumeWork
 } from '../controllers/userController.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 import roleMiddleware from '../middleware/roleMiddleware.js';
@@ -50,6 +51,7 @@ router.get('/history',authMiddleware, roleMiddleware('supervisor'), getFullHisto
 // Let's keep /storekeepers/ for consistency with frontend
 router.get('/storekeepers/:id/status',authMiddleware, roleMiddleware('storekeeper'), getStorekeeperStatus);
 router.post('/storekeepers/:id/finish',authMiddleware, roleMiddleware('storekeeper'), finishJob);
+router.post('/storekeepers/:id/resume',authMiddleware, roleMiddleware('storekeeper'), resumeWork);
 router.post('/storekeepers/subscribe',authMiddleware, roleMiddleware('storekeeper'), subscribePush);
 
 export default router;

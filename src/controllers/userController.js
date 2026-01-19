@@ -154,16 +154,44 @@ export const setBreakStatus = async (req, res) => {
         const sk = await User.findById(id);
         if (!sk) return res.status(404).json({ message: 'Not found' });
 
-        if (sk.status === 'busy') {
-            return res.status(400).json({ message: 'Cannot go entirely to break while busy (Finish job first)' });
+        // If trying to take a break while busy
+        if (status === 'break' && sk.status === 'busy') {
+            // Allow break BUT keep status busy? Or Fail?
+            // User requirement: "Resume work (status='busy', onBreak=false)" implies a "Break while Busy" state might exist?
+            // Or maybe "Resume" is just "Back to work".
+            // Let's stick to standard behavior: Cannot break while busy active job.
+            // BUT if they are "BusyNoJob" (released dock)?
+            return res.status(400).json({ message: 'Cannot go to break while busy.' });
         }
 
         sk.status = status;
+        sk.onBreak = (status === 'break');
         await sk.save();
 
         if (status === 'available') await tryAssign();
 
         res.json(sk);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const resumeWork = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const sk = await User.findById(id);
+        if (!sk) return res.status(404).json({ message: 'Not found' });
+
+        // Requirement: status = 'busy', onBreak = false
+        sk.status = 'busy';
+        sk.onBreak = false;
+        await sk.save();
+
+        // Should we trigger tryAssign? 
+        // If they became busy, they are NOT available for new tasks.
+        // So NO tryAssign.
+
+        res.json({ message: 'Resumed work (Busy)' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -184,25 +212,43 @@ export const finishJob = async (req, res) => {
         });
 
         const job = await Company.findOne({ assignedStorekeeper: sk._id, status: 'receiving' });
+        
+        if (mode === 'dock_only') {
+            if (job && job.dock) {
+                const dock = await Dock.findById(job.dock);
+                if (dock) {
+                    dock.status = 'available';
+                    dock.currentShipment = null;
+                    await dock.save();
+                }
+                // IMPORTANT: disassociate dock so we don't accidentally free it again later if reassigned
+                job.dock = null;
+                await job.save();
+            }
+            // Job stays 'receiving', SK stays 'busy'
+            return res.json({ message: 'Dock released, job continues' });
+        }
+
+        // Normal Finish (or cleanup if job lost)
         if (job) {
             job.status = 'finished';
             job.completedAt = new Date();
-            await job.save();
-
-            const dock = await Dock.findById(job.dock);
-            if (dock) {
-                dock.status = 'available';
-                dock.currentShipment = null;
-                await dock.save();
+            job.finishedAt = new Date();
+            
+            // Free dock if still held
+            if (job.dock) {
+                const dock = await Dock.findById(job.dock);
+                if (dock) {
+                    dock.status = 'available';
+                    dock.currentShipment = null;
+                    await dock.save();
+                }
             }
+            await job.save();
         }
 
-        if (mode === 'dock_only') {
-           
-        } else {
-            sk.status = 'available';
-            await sk.save();
-        }
+        sk.status = 'available';
+        await sk.save();
 
         await tryAssign();
 
@@ -229,3 +275,5 @@ export const subscribePush = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
+
+

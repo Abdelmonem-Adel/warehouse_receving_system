@@ -53,6 +53,11 @@ export const tryAssign = async () => {
 const executeAssignment = async (company, dock, sk) => {
     console.log(`Assigning ${company.companyName} -> Dock ${dock.number} -> SK ${sk.name}`);
     
+    // Set Start Time ONLY ONCE
+    if (!company.startedAt) {
+        company.startedAt = new Date();
+    }
+    
     dock.status = 'busy';
     dock.currentShipment = company._id;
     await dock.save();

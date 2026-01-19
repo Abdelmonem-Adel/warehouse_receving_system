@@ -22,9 +22,27 @@ self.addEventListener('push', function(event) {
   );
 });
 
+// self.addEventListener('notificationclick', function(event) {
+//   event.notification.close();
+//   event.waitUntil(
+//     clients.openWindow('storekeeper.html')
+//   );
+// });
+
+
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
+
   event.waitUntil(
-    clients.openWindow('storekeeper.html')
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      // ركّز على أي tab مفتوح للـ app
+      for (const client of clientList) {
+        if (client.url.includes('storekeeper.html') && 'focus' in client) {
+          return client.focus(); // يفتح tab موجود بدل ما يفتح صفحة جديدة
+        }
+      }
+      // لو مفيش tab مفتوح، افتح صفحة جديدة
+      return clients.openWindow('storekeeper.html');
+    })
   );
 });

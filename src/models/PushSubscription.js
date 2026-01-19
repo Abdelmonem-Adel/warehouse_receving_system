@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const pushSubscriptionSchema = mongoose.Schema({
     storekeeperId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },
     endpoint: { type: String, required: true },
     keys: {
         p256dh: { type: String, required: true },
