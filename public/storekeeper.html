@@ -15,15 +15,25 @@
     <script src="js/auth.js"></script>
 </head>
 <body class="p-6">
-    <div class="absolute top-2 left-2 flex space-x-2 z-50">
-        <button onclick="i18n.switchLanguage('ar')" class="px-2 py-1 bg-white border rounded shadow-sm text-xs font-medium hover:bg-gray-50">العربية</button>
-        <button onclick="i18n.switchLanguage('en')" class="px-2 py-1 bg-white border rounded shadow-sm text-xs font-medium hover:bg-gray-50">En</button>
-    </div>
+    
     <header class="flex justify-between items-center mb-8 bg-white p-4 rounded shadow">
         <div>
             <h1 class="text-2xl font-bold text-gray-800"><span data-i18n="welcome_msg">👷 أهلاً، </span><span id="skNameSpan"></span></h1>
             <p class="text-sm text-gray-500"><span data-i18n="status_label">حالتك الحالية: </span><span id="statusSpan" class="font-bold">...</span></p>
         </div>
+
+
+        <div class="flex items-center space-x-4">
+            <!-- Language Switcher -->
+            <div class="flex space-x-2">
+                <button onclick="i18n.switchLanguage('ar')" class="px-2 py-1 bg-white border border-gray-300 rounded shadow-sm text-xs font-medium hover:bg-gray-50 transition-colors">
+                    العربية
+                </button>
+                <button onclick="i18n.switchLanguage('en')" class="px-2 py-1 bg-white border border-gray-300 rounded shadow-sm text-xs font-medium hover:bg-gray-50 transition-colors">
+                    English
+                </button>
+            </div>
+
         <div>
             <a href="#" onclick="auth.logout()" data-i18n="logout" class="text-red-500 text-sm">تسجيل خروج</a>
         </div>

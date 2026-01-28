@@ -18,38 +18,29 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body class="p-4">
-    <div class="absolute top-2 left-2 flex space-x-2 z-50">
-        <button onclick="i18n.switchLanguage('ar')" class="px-2 py-1 bg-white border rounded shadow-sm text-xs font-medium hover:bg-gray-50">العربية</button>
-        <button onclick="i18n.switchLanguage('en')" class="px-2 py-1 bg-white border rounded shadow-sm text-xs font-medium hover:bg-gray-50">En</button>
-    </div>
+    
     <header class="flex justify-between items-center mb-6 bg-white p-3 rounded shadow">
         <h1 data-i18n="supervisor_header" class="text-xl font-bold text-gray-800">👀لوحة المشرف </h1>
         <div class="space-x-4 space-x-reverse">
+
+            <div class="flex items-center space-x-4">
+            <!-- Language Switcher -->
+            <div class="flex space-x-2">
+                <button onclick="i18n.switchLanguage('ar')" class="px-2 py-1 bg-white border border-gray-300 rounded shadow-sm text-xs font-medium hover:bg-gray-50 transition-colors">
+                    العربية
+                </button>
+                <button onclick="i18n.switchLanguage('en')" class="px-2 py-1 bg-white border border-gray-300 rounded shadow-sm text-xs font-medium hover:bg-gray-50 transition-colors">
+                    English
+                </button>
+            </div>
+
+
             <!-- <a href="supervisor-receipts.html" class="bg-blue-100 text-blue-700 px-3 py-1 rounded font-bold hover:bg-blue-200 ml-2">📊 عرض الاستلامات</a> -->
             <a href="#" onclick="auth.logout()" data-i18n="logout" class="text-red-500 font-bold text-sm bg-white border border-red-200 px-3 py-1 rounded hover:bg-red-50">خروج</a>
         </div>
     </header>
 
-    <!-- Transfer Modal -->
-    <div id="transferModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded shadow-lg w-96 relative">
-            <button onclick="toggleTransferModal()" class="absolute top-2 left-2 text-gray-500 hover:text-red-500">✕</button>
-            <h2 data-i18n="transfer_modal_title" class="text-xl font-bold mb-4">🔁 نقل/إعادة تعيين (Transfer)</h2>
-            <p data-i18n="transfer_modal_desc" class="text-sm text-gray-500 mb-4">نقل الأمين لرصيف آخر أو العكس.</p>
-            <form id="transferForm" class="space-y-4">
-                <input type="hidden" id="transCompanyId">
-                <div>
-                    <label data-i18n="label_dock" class="block text-sm font-medium">1. اختر الرصيف</label>
-                    <select id="transDockSelect" class="w-full p-2 border rounded" required></select>
-                </div>
-                <div>
-                    <label data-i18n="label_sk" class="block text-sm font-medium">2. اختر أمين المخزن</label>
-                    <select id="transSkSelect" class="w-full p-2 border rounded" required></select>
-                </div>
-                <button type="submit" data-i18n="confirm_button" class="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700">تأكيد التعديل</button>
-            </form>
-        </div>
-    </div>
+  
 
     <!-- Docks Section (Added) -->
     <div class="bg-white p-4 rounded shadow mb-4">
