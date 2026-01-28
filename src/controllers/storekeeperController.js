@@ -1,13 +1,14 @@
-import Storekeeper from '../models/Storekeeper.js';
+import User from '../models/User.js';
+import Receipts from '../models/Receipts.js';
 import Dock from '../models/Dock.js';
-import Company from '../models/Company.js';
-import PushSubscription from '../models/PushSubscription.js';
+// import Company from '../models/Company.js';
+// import PushSubscription from '../models/PushSubscription.js';
 import { tryAssign } from '../services/assignmentService.js';
-import { getPublicKey } from '../services/notificationService.js';
+// import { getPublicKey } from '../services/notificationService.js';
 
 export const login = async (req, res) => {
     const { username, password } = req.body;
-    const sk = await Storekeeper.findOne({ username });
+    const sk = await User.findOne({ username });
     
     if (sk && sk.password === password) {
         res.json(sk);
@@ -16,43 +17,22 @@ export const login = async (req, res) => {
     }
 };
 
-export const getStorekeeperStatus = async (req, res) => {
-    try {
-        const sk = await Storekeeper.findById(req.params.id);
-        if (!sk) return res.status(404).json({ message: 'Not found' });
-
-        let currentJob = null;
-        if (sk.status === 'busy') {
-            currentJob = await Company.findOne({ assignedStorekeeper: sk._id, status: 'receiving' }).populate('dock');
-        }
-        res.json({ storekeeper: sk, currentJob, vapidKey: getPublicKey() });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
 
 export const finishJob = async (req, res) => {
     const { id } = req.params; // Storekeeper ID
     try {
-        const sk = await Storekeeper.findById(id);
+        const sk = await User.findById(id);
         if (!sk) return res.status(404).json({ message: 'Not found' });
         
         if (sk.status !== 'busy') return res.status(400).json({ message: 'Not busy' });
 
-        // Find the job
-        const job = await Company.findOne({ assignedStorekeeper: sk._id, status: 'receiving' });
-        if (job) {
-            job.status = 'finished';
-            job.completedAt = new Date();
-            await job.save();
-
-            // Free the Dock
-            const dock = await Dock.findById(job.dock);
-            if (dock) {
-                dock.status = 'available';
-                dock.currentShipment = null;
-                await dock.save();
-            }
+        // Free the Dock
+        const dock = await Dock.findOne({ assignedStorekeeper: sk._id });
+        if (dock) {
+            dock.status = 'available';
+            dock.assignedStorekeeper = null;
+            dock.currentShipment = null;
+            await dock.save();
         }
 
         // Free the SK
@@ -83,5 +63,137 @@ export const subscribePush = async (req, res) => {
         res.status(201).json({ message: 'Subscribed' });
     } catch (error) {
         res.status(400).json({ message: error.message });
+    }
+};
+
+
+export const createReceipt = async (req, res) => {
+    console.log('API: Create Receipt', req.body);
+    try {
+        const sk = await User.findById(req.user.id).select('name');
+        if (!sk) {
+            console.error('CreateReceipt: User not found', req.user.id);
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const { companyName, dockNumber, poNumber, truckType } = req.body;
+        
+        // Find Dock
+        const dock = await Dock.findOne({ number: dockNumber });
+        if (!dock) {
+             return res.status(404).json({ message: `Dock ${dockNumber} not found` });
+        }
+
+        if (dock.status === 'busy') {
+            return res.status(400).json({ message: `Dock ${dockNumber} is already in use` });
+        }
+
+        const receipt = new Receipts({ 
+            keeperName: sk.name, 
+            companyName, 
+            dockNumber: dock._id, // Use ID for ref
+            poNumber, 
+            truckType,
+            startedAt: new Date() 
+        });
+        console.log('Attempting to save receipt:', receipt);
+        await receipt.save();
+
+        // Update Dock Status
+        dock.status = 'busy';
+        dock.assignedStorekeeper = sk._id;
+        dock.currentShipment = receipt._id;
+        await dock.save();
+
+        // Update User status to busy
+        await User.findByIdAndUpdate(req.user.id, { status: 'busy' });
+
+        console.log('CreateReceipt: Success', receipt._id);
+        res.status(201).json(receipt);
+    } catch (error) {
+        console.error('CreateReceipt: Error', error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const completeReceipt = async (req, res) => {
+    console.log('API: Complete Receipt', req.params.id);
+    try {
+        const { id } = req.params;
+        const { totalItems, mode } = req.body; // mode: 'full' or 'dock_only'
+
+        const receipt = await Receipts.findById(id);
+        if (!receipt) {
+            console.error('CompleteReceipt: Receipt not found', id);
+            return res.status(404).json({ message: 'Receipt not found' });
+        }
+
+        // Verify the receipt belongs to the logged-in keeper
+        const sk = await User.findById(req.user.id);
+        if (!sk || receipt.keeperName !== sk.name) {
+            console.error('CompleteReceipt: Unauthorized', receipt.keeperName, sk?.name);
+            return res.status(403).json({ message: 'Unauthorized' });
+        }
+
+        if (receipt.status === 'completed') {
+            return res.status(400).json({ message: 'Receipt already completed' });
+        }
+
+        // --- DOCK ONLY MODE ---
+        if (mode === 'dock_only') {
+            const dock = await Dock.findOne({ assignedStorekeeper: sk._id });
+            if (dock) {
+                console.log(`Releasing Dock ${dock.number} (Dock Only Mode)`);
+                dock.status = 'available';
+                dock.assignedStorekeeper = null;
+                dock.currentShipment = null;
+                await dock.save();
+            }
+            // SK stays BUSY, receipt stays IN-PROGRESS
+            return res.json({ message: 'Dock released, continuing receipt count' });
+        }
+
+        // --- FULL COMPLETE MODE ---
+        if (!totalItems) {
+            return res.status(400).json({ message: 'Total items is required to complete receipt.' });
+        }
+
+        // Update Receipt data
+        receipt.totalItems = totalItems;
+        receipt.endedAt = new Date();
+        if (receipt.startedAt) {
+            const durationMs = receipt.endedAt - receipt.startedAt;
+            receipt.durationMinutes = Math.round(durationMs / 60000);
+        }
+        receipt.status = 'completed';
+        await receipt.save();
+
+        const dock = await Dock.findOne({ assignedStorekeeper: sk._id });
+        if (dock) {
+            console.log(`Releasing Dock ${dock.number} (Full Completion)`);
+            dock.status = 'available';
+            dock.assignedStorekeeper = null;
+            dock.currentShipment = null;
+            await dock.save();
+        }
+
+        sk.status = 'available';
+        await sk.save();
+        await tryAssign();
+        console.log(`CompleteReceipt (Full): SK ${sk.name} available.`);
+
+        res.json(receipt);
+    } catch (error) {
+        console.error('CompleteReceipt: Error', error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const getAllReceipts = async (req, res) => {
+    try {
+        const receipts = await Receipts.find().sort({ createdAt: -1 }).populate('dockNumber');
+        res.json(receipts);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };

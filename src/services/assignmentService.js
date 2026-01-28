@@ -1,147 +1,90 @@
 import Dock from '../models/Dock.js';
 import User from '../models/User.js';
-import Company from '../models/Company.js';
+// import Company from '../models/Company.js';
 import AuditLog from '../models/AuditLog.js';
-import { sendNotification } from './notificationService.js';
+// import { sendNotification } from './notificationService.js';
 
 export const tryAssign = async () => {
     try {
-        console.log('Running Assignment Logic...');
-
-        
-        
-        const waitingCompanies = await Company.find({ status: 'waiting' }).sort({ createdAt: 1 });
-        if (waitingCompanies.length === 0) return;
-
-        // Loop through queue to find matches
-        for (const company of waitingCompanies) {
-            let selectedDock = null;
-
-            // Scenario A: Manual Dock Preference
-            if (company.dock) {
-                const preDock = await Dock.findById(company.dock);
-                if (preDock && preDock.status === 'available') {
-                   selectedDock = preDock;
-                }
-                
-            } else {
-                // Scenario B: No preference
-               selectedDock = await Dock.findOne({ status: 'available' });
-            }
-
-            if (!selectedDock) continue; 
-            
-            const freeSK = await User.findOne({ role: 'storekeeper', status: 'available' }).sort({ priorityIndex: 1 });
-            
-            if (!freeSK) {
-                console.log(`- No available Storekeeper found for ${company.companyName}`);
-                break; 
-            }
-
-            console.log(`+ Selected SK: ${freeSK.name} (Priority: ${freeSK.priorityIndex})`);
-
-            // ASSIGN
-            await executeAssignment(company, selectedDock, freeSK);
-            
-        }
-
+        console.log('Running Automatic Assignment logic (Currently Disabled - Manual Only)...');
+        // If we want to restore automatic queueing without 'Company', 
+        // we would need a new 'Queue' or 'Request' model.
+        // For now, removing company-based logic.
+        return;
     } catch (e) {
         console.error('Assignment Error:', e);
     }
 };
 
-const executeAssignment = async (company, dock, sk) => {
-    console.log(`Assigning ${company.companyName} -> Dock ${dock.number} -> SK ${sk.name}`);
-    
-    // Set Start Time ONLY ONCE
-    if (!company.startedAt) {
-        company.startedAt = new Date();
-    }
+const executeAssignment = async (dock, sk) => {
+    console.log(`Assigning -> Dock ${dock.number} -> SK ${sk.name}`);
     
     dock.status = 'busy';
-    dock.currentShipment = company._id;
+    dock.assignedStorekeeper = sk._id;
     await dock.save();
 
     sk.status = 'busy';
     sk.lastTurnAt = new Date();
     await sk.save();
 
-    company.status = 'receiving';
-    company.dock = dock._id;
-    company.assignedStorekeeper = sk._id;
-    await company.save();
-
-    await sendNotification(sk._id, {
-        title: '🔔 دورك جه',
-        body: `شركة ${company.companyName} على Dock رقم ${dock.number}`
-    });
+    // await sendNotification(sk._id, {
+    //     title: '🔔 دورك جه',
+    //     body: `Dock رقم ${dock.number}`
+    // });
 };
 
-export const manualOverride = async (supervisorName, companyId, dockId, storekeeperId) => {
+export const manualOverride = async (supervisorName, dockId, storekeeperId) => {
     // Force Assignment
-    const company = await Company.findById(companyId);
     const dock = await Dock.findById(dockId);
     const sk = await User.findById(storekeeperId);
 
-    if (!company || !dock || !sk) throw new Error('Invalid IDs');
+    if (!dock || !sk) throw new Error('Invalid IDs');
 
     // Logs
     await AuditLog.create({
         supervisorName,
         action: 'MANUAL_ASSIGN',
-        details: `Assigned ${company.companyName} to Dock ${dock.number} & SK ${sk.name}`
+        details: `Assigned Dock ${dock.number} to SK ${sk.name}`
     });
 
-    
-    if (dock.status === 'busy' && dock.currentShipment) {
-        
-    }
-
-    await executeAssignment(company, dock, sk);
+    await executeAssignment(dock, sk);
 };
 
-export const transferJob = async (supervisorName, companyId, newDockId, newSkId) => {
-    const company = await Company.findById(companyId);
-    if (!company || company.status !== 'receiving') throw new Error('Company is not currently receiving');
+export const transferJob = async (supervisorName, newDockId, newSkId) => {
+    // Find current dock of the new SK if they were already on one (unlikely but safe)
+    // Or find which dock the old SK was on.
     
-    const oldSkId = company.assignedStorekeeper;
-    const oldDockId = company.dock;
-
-    // 1. Notify Old SK (Cancellation)
-    if (oldSkId && oldSkId.toString() !== newSkId) {
-        const oldSk = await User.findById(oldSkId);
-        if(oldSk) {
-            oldSk.status = 'available'; 
-            await oldSk.save();
-            await sendNotification(oldSk._id, {
-                title: '❌ تم إلغاء المهمة',
-                body: `تم نقل شركة ${company.companyName} لزميل آخر`
-            });
-        }
-    }
-
-    // 2. Clear Old Dock if different
-    if (oldDockId && oldDockId.toString() !== newDockId) {
-        const oldDock = await Dock.findById(oldDockId);
-        if(oldDock) {
-            oldDock.status = 'available';
-            oldDock.currentShipment = null;
-            await oldDock.save();
-        }
-    }
-
-    // 3. Prepare New Resources
+    // For transfer, we usually want to move a SK to a different dock, or a dock to a different SK.
+    // Let's assume we are assigning a NEW manual state.
+    
     const newDock = await Dock.findById(newDockId);
     const newSk = await User.findById(newSkId);
 
-    // 4. Update & Execute
+    if (!newDock || !newSk) throw new Error('Invalid IDs');
+
+    // 1. Release whoever was on that dock
+    if (newDock.assignedStorekeeper) {
+        const oldSk = await User.findById(newDock.assignedStorekeeper);
+        if (oldSk) {
+            oldSk.status = 'available';
+            await oldSk.save();
+        }
+    }
+
+    // 2. Release the new SK from any dock they might have been on
+    const existingDock = await Dock.findOne({ assignedStorekeeper: newSk._id });
+    if (existingDock) {
+        existingDock.status = 'available';
+        existingDock.assignedStorekeeper = null;
+        await existingDock.save();
+    }
+
+    // 3. Update & Execute
     await AuditLog.create({
         supervisorName,
         action: 'TRANSFER_JOB',
-        details: `Transferred ${company.companyName} from SK ${oldSkId} to SK ${newSk.name}`
+        details: `Transferred Dock ${newDock.number} to SK ${newSk.name}`
     });
 
-    await executeAssignment(company, newDock, newSk);
-    
-    
+    await executeAssignment(newDock, newSk);
 };

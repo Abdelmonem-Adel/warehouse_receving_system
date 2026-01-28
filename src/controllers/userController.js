@@ -1,10 +1,10 @@
 import User from '../models/User.js';
 import Dock from '../models/Dock.js';
-import Company from '../models/Company.js';
-import PushSubscription from '../models/PushSubscription.js';
+import Receipts from '../models/Receipts.js';
+// import PushSubscription from '../models/PushSubscription.js';
 import AuditLog from '../models/AuditLog.js';
 import { tryAssign, manualOverride } from '../services/assignmentService.js';
-import { getPublicKey } from '../services/notificationService.js';
+// import { getPublicKey } from '../services/notificationService.js';
 
 import jwt from 'jsonwebtoken';
 
@@ -92,9 +92,9 @@ export const listUsers = async (req, res) => {
 
 // Supervisor
 export const manualAssign = async (req, res) => {
-    const { supervisorName, companyId, dockId, storekeeperId } = req.body;
+    const { supervisorName, dockId, storekeeperId } = req.body;
     try {
-        await manualOverride(supervisorName, companyId, dockId, storekeeperId);
+        await manualOverride(supervisorName, dockId, storekeeperId);
         res.json({ message: 'Manual assignment successful' });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -102,11 +102,9 @@ export const manualAssign = async (req, res) => {
 };
 
 export const manualReassign = async (req, res) => {
-    const { supervisorName, companyId, dockId, storekeeperId } = req.body;
+    const { supervisorName, dockId, storekeeperId } = req.body;
     try {
-        
-        const { transferJob } = await import('../services/assignmentService.js');
-        await transferJob(supervisorName, companyId, dockId, storekeeperId);
+        await transferJob(supervisorName, dockId, storekeeperId);
         res.json({ message: 'Job Re-assigned successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -137,10 +135,23 @@ export const getStorekeeperStatus = async (req, res) => {
         if (!sk) return res.status(404).json({ message: 'Not found' }); // User might be deleted
 
         let currentJob = null;
+        let activeReceiptId = null;
         if (sk.status === 'busy') {
-            currentJob = await Company.findOne({ assignedStorekeeper: sk._id, status: 'receiving' }).populate('dock');
+            const dock = await Dock.findOne({ assignedStorekeeper: sk._id, status: 'busy' });
+            
+            // Find the active receipt
+            const receipt = await Receipts.findOne({ keeperName: sk.name, status: 'in-progress' }).sort({ createdAt: -1 });
+            
+            if (dock || receipt) {
+                currentJob = {
+                    dock: dock,
+                    companyName: receipt ? receipt.companyName : 'Unknown',
+                    poNumber: receipt ? receipt.poNumber : '-'
+                };
+                if (receipt) activeReceiptId = receipt._id;
+            }
         }
-        res.json({ storekeeper: sk, currentJob, vapidKey: getPublicKey() });
+        res.json({ storekeeper: sk, currentJob, activeReceiptId });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -156,11 +167,7 @@ export const setBreakStatus = async (req, res) => {
 
         // If trying to take a break while busy
         if (status === 'break' && sk.status === 'busy') {
-            // Allow break BUT keep status busy? Or Fail?
-            // User requirement: "Resume work (status='busy', onBreak=false)" implies a "Break while Busy" state might exist?
-            // Or maybe "Resume" is just "Back to work".
-            // Let's stick to standard behavior: Cannot break while busy active job.
-            // BUT if they are "BusyNoJob" (released dock)?
+            
             return res.status(400).json({ message: 'Cannot go to break while busy.' });
         }
 
@@ -187,10 +194,6 @@ export const resumeWork = async (req, res) => {
         sk.onBreak = false;
         await sk.save();
 
-        // Should we trigger tryAssign? 
-        // If they became busy, they are NOT available for new tasks.
-        // So NO tryAssign.
-
         res.json({ message: 'Resumed work (Busy)' });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -211,40 +214,23 @@ export const finishJob = async (req, res) => {
             details: `Finished job with mode: ${mode}`
         });
 
-        const job = await Company.findOne({ assignedStorekeeper: sk._id, status: 'receiving' });
+        const dock = await Dock.findOne({ assignedStorekeeper: sk._id });
         
         if (mode === 'dock_only') {
-            if (job && job.dock) {
-                const dock = await Dock.findById(job.dock);
-                if (dock) {
-                    dock.status = 'available';
-                    dock.currentShipment = null;
-                    await dock.save();
-                }
-                // IMPORTANT: disassociate dock so we don't accidentally free it again later if reassigned
-                job.dock = null;
-                await job.save();
+            if (dock) {
+                dock.status = 'available';
+                dock.assignedStorekeeper = null;
+                dock.currentShipment = null;
+                await dock.save();
             }
-            // Job stays 'receiving', SK stays 'busy'
             return res.json({ message: 'Dock released, job continues' });
         }
 
-        // Normal Finish (or cleanup if job lost)
-        if (job) {
-            job.status = 'finished';
-            job.completedAt = new Date();
-            job.finishedAt = new Date();
-            
-            // Free dock if still held
-            if (job.dock) {
-                const dock = await Dock.findById(job.dock);
-                if (dock) {
-                    dock.status = 'available';
-                    dock.currentShipment = null;
-                    await dock.save();
-                }
-            }
-            await job.save();
+        if (dock) {
+            dock.status = 'available';
+            dock.assignedStorekeeper = null;
+            dock.currentShipment = null;
+            await dock.save();
         }
 
         sk.status = 'available';

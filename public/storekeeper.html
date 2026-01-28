@@ -20,297 +20,95 @@
             <p class="text-sm text-gray-500">حالتك الحالية: <span id="statusSpan" class="font-bold">...</span></p>
         </div>
         <div>
-            <button id="notifyBtn" class="bg-blue-100 text-blue-600 px-3 py-1 rounded text-sm mb-2 block hidden">تفعيل الإشعارات</button>
             <a href="#" onclick="auth.logout()" class="text-red-500 text-sm">تسجيل خروج</a>
         </div>
     </header>
 
-    <div class="max-w-2xl mx-auto">
-        <!-- Idle State (Available) -->
-        <div id="idleState" class="hidden text-center py-10 bg-white rounded shadow-lg">
-            <div class="text-6xl mb-4">⏳</div>
-            <h2 class="text-2xl font-bold text-gray-700">أنت الآن في وضع الانتظار</h2>
-            <p class="text-gray-500 mt-2">سيتم إشعارك فور وصول دورك.</p>
-            
-            <button onclick="toggleBreak('break')" class="mt-8 bg-gray-200 text-gray-700 px-6 py-2 rounded-full font-bold hover:bg-gray-300 transition">
-                ☕ أخذ استراحة (Break)
-            </button>
-        </div>
+    <div class="max-w-2xl mx-auto space-y-6">
+        <!-- Receipt Form -->
+        <div class="bg-white rounded shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-700 mb-4 text-center">فتح استلامة</h2>
+            <form id="receiptForm" onsubmit="createReceipt(); return false;" class="space-y-4">
+                <input type="text" id="receiptCompanyName" placeholder="اسم الشركة" class="w-full border border-gray-300 p-3 rounded" required>
+                <select id="receiptDockNumber" class="w-full border border-gray-300 p-3 rounded" required>
+                    <option value="" disabled selected>اختر رصيف (Dock Number)</option>
+                    <option value="1">Dock 1</option>
+                    <option value="2">Dock 2</option>
+                    <option value="3">Dock 3</option>
+                    <option value="4">Dock 4</option>
+                    <option value="5">Dock 5</option>
+                    <option value="6">Dock 6</option>
+                    <option value="7">Dock 7</option>
+                    <option value="8">Dock 8</option>
+                    <option value="9">Dock 9</option>
+                </select>
+                <input type="text" id="receiptPoNumber" placeholder="رقم الفاتورة (PO Number)" class="w-full border border-gray-300 p-3 rounded" required>
+                <select id="receiptTruckType" class="w-full border border-gray-300 p-3 rounded" required>
+                    <option value="" disabled selected>نوع الشاحنة</option>
+                    <option value="دبابة">دبابة</option>
+                    <option value="جامبو">جامبو</option>
+                    <option value="جرار">جرار</option>
+                </select>
+                <button type="submit" id="submitReceiptBtn" class="w-full bg-green-600 text-white px-6 py-3 rounded font-bold hover:bg-green-700 transition">ارسال</button>
+            </form>
 
-        <!-- Break State -->
-        <div id="breakState" class="hidden text-center py-10 bg-orange-50 rounded shadow-lg border border-orange-200">
-            <div class="text-6xl mb-4">☕</div>
-            <h2 class="text-2xl font-bold text-orange-700">أنت في استراحة</h2>
-            <p class="text-gray-600 mt-2">لن يتم إسناد أي مهام لك.</p>
-
-            <button onclick="toggleBreak('available')" class="mt-8 bg-green-600 text-white px-6 py-2 rounded-full font-bold hover:bg-green-700 transition">
-                ▶️ العودة للعمل (Available)
-            </button>
-        </div>
-
-        <!-- Working State (Busy) -->
-        <div id="workingState" class="hidden bg-white rounded shadow-lg overflow-hidden">
-            <div class="bg-[#00A651] p-4 text-white text-center">
-                <h2 class="text-2xl font-bold">🔔 دورك للعمل</h2>
-            </div>
-            <div class="p-6 text-center">
-                <p class="text-gray-600 mb-2">يرجى التوجه إلى:</p>
-                <div class="text-4xl font-bold text-gray-800 mb-6">Dock <span id="dockNumber">?</span></div>
+            <!-- Completion Section (shown after Send) -->
+            <div id="completionSection" class="hidden mt-6 pt-6 border-t border-gray-200 space-y-4">
+                <h3 class="text-lg font-bold text-gray-700">الانتهاء من الاستلام</h3>
+                <input type="number" id="receiptTotalItems" placeholder="إجمالي عدد القطع" class="w-full border border-gray-300 p-3 rounded" required>
                 
-                <div class="bg-gray-50 p-4 rounded mb-6 text-right">
-                    <p class="text-sm text-gray-500 mb-1">الشركة:</p>
-                    <p class="font-bold text-lg mb-3" id="companyName">...</p>
-                    <p class="text-sm text-gray-500 mb-1">رقم الفاتورة:</p>
-                    <p class="font-bold text-lg" id="invoiceNumber">...</p>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Injected via JS -->
+                <div class="grid grid-cols-2  gap-4">
+                    <button id="dockOnlyBtn" onclick="completeReceipt('dock_only')" class="bg-yellow-500 text-white px-6 py-3 rounded font-bold hover:bg-yellow-600 transition shadow">
+                         الدوك فضي <br><span class="text-xs opacity-80">(أنا لسه مستلم)</span>
+                    </button>
+                    <button id="fullCompleteBtn" onclick="completeReceipt('full')" class="bg-blue-600 text-white px-6 py-3 rounded font-bold hover:bg-blue-700 transition shadow">
+                         الكل خلص <br><span class="text-xs opacity-80">(الدوك فاضي + أنا متاح)</span>
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Busy No Job State (Logic for Dock Only aftermath) -->
-        <div id="busyIdleState" class="hidden text-center py-10 bg-white rounded shadow-lg">
-             <div class="text-6xl mb-4">🖐️</div>
-             <h2 class="text-2xl font-bold text-red-500">أنت في حالة مشغول</h2>
-             <p class="text-gray-500 mt-2">لقد قمت بتحرير الدوك ولكن لم تنهي عملك بعد.</p>
-             <button onclick="resumeWork()" class="mt-6 bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">▶️ Resume Work (busy)</button>
-             <button onclick="toggleBreak('available')" class="mt-2 block mx-auto bg-green-100 text-green-700 px-4 py-1 rounded hover:bg-green-200">العودة للعمل (Available)</button>
+        <!-- Current Job Info (shown when busy) -->
+        <div id="jobInfo" class="hidden bg-blue-50 rounded shadow-lg p-6 border border-blue-200">
+            <h3 class="text-xl font-bold text-blue-800 mb-4 text-center">🔔 الشغل الحالي</h3>
+            <div class="space-y-2 text-right">
+                <div class="bg-white p-3 rounded">
+                    <p class="text-sm text-gray-500">الدوك:</p>
+                    <p class="font-bold text-lg text-gray-800" id="currentDock">-</p>
+                </div>
+                <div class="bg-white p-3 rounded">
+                    <p class="text-sm text-gray-500">الشركة:</p>
+                    <p class="font-bold text-lg text-gray-800" id="currentCompany">-</p>
+                </div>
+                <div class="bg-white p-3 rounded">
+                    <p class="text-sm text-gray-500">رقم الفاتورة:</p>
+                    <p class="font-bold text-lg text-gray-800" id="currentInvoice">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Control Buttons -->
+        <div class="bg-white rounded shadow-lg p-6">
+            <h3 class="text-lg font-bold text-gray-700 mb-4 text-center">التحكم في الحالة</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="toggleBreak('break')" class="bg-orange-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-orange-600 transition">
+                    ☕ استراحة
+                </button>
+                <button onclick="toggleBreak('available')" class="bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 transition">
+                    ✅ متاح
+                </button>
+            </div>
+        </div>
+
+        <!-- Job Control Buttons (shown when busy) -->
+        <div id="jobControls" class="hidden bg-white rounded shadow-lg p-6">
+            <h3 class="text-lg font-bold text-gray-700 mb-4 text-center">إنهاء الاستلام</h3>
+            <div id="jobButtonsContainer" class="grid gap-4">
+                <!-- Buttons injected via JS based on job state -->
+            </div>
         </div>
     </div>
 
-    <script>
-        window.onload = () => {
-             auth.checkAuth(['storekeeper']);
-             // Set skName from auth
-             const user = auth.getUser();
-             if(user) {
-                 document.getElementById('skNameSpan').innerText = user.name;
-             }
-             fetchStatus();
-        };
-
-        const skId = auth.getUser()?.id;
-        const skName = auth.getUser()?.name;
-        const notifyBtn = document.getElementById('notifyBtn');
-
-        // if (!skId) handled by checkAuth
-
-        function urlBase64ToUint8Array(base64String) {
-            const padding = '='.repeat((4 - base64String.length % 4) % 4);
-            const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-            const rawData = window.atob(base64);
-            const outputArray = new Uint8Array(rawData.length);
-            for (let i = 0; i < rawData.length; ++i) {
-                outputArray[i] = rawData.charCodeAt(i);
-            }
-            return outputArray;
-        }
-
-        async function fetchStatus() {
-            try {
-                const res = await auth.fetchWithAuth(`/api/storekeepers/${skId}/status`);
-                if(!res) return;
-                const data = await res.json();
-                
-                updateUI(data.storekeeper, data.currentJob);
-
-                if (data.vapidKey && Notification.permission !== 'granted') {
-                    notifyBtn.classList.remove('hidden');
-                    notifyBtn.onclick = () => registerPush(data.vapidKey);
-                } else if (data.vapidKey && Notification.permission === 'granted') {
-                     registerPush(data.vapidKey);
-                }
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        async function registerPush(vapidKey) {
-            if ('serviceWorker' in navigator) {
-                try {
-                    const register = await navigator.serviceWorker.register('sw.js');
-                    const subscription = await register.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: urlBase64ToUint8Array(vapidKey)
-                    });
-                    
-                    await auth.fetchWithAuth('/api/storekeepers/subscribe', {
-                        method: 'POST',
-                        body: JSON.stringify({ storekeeperId: skId, subscription })
-                    });
-                     
-
-                    notifyBtn.classList.add('hidden');
-                } catch (e) { }
-            }
-        }
-
-        function updateUI(sk, job) {
-            const statusSpan = document.getElementById('statusSpan');
-            
-            const idleDiv = document.getElementById('idleState');
-            const breakDiv = document.getElementById('breakState');
-            const workDiv = document.getElementById('workingState');
-            const busyIdleDiv = document.getElementById('busyIdleState');
-
-            // Hide all first
-            idleDiv.classList.add('hidden');
-            breakDiv.classList.add('hidden');
-            workDiv.classList.add('hidden');
-            busyIdleDiv.classList.add('hidden');
-
-            // Text Status Update
-            if (sk.status === 'available') {
-                statusSpan.innerText = '🟢 متاح';
-                statusSpan.className = 'font-bold text-[#00A651]';
-                idleDiv.classList.remove('hidden');
-            } 
-            else if (sk.status === 'break') {
-                statusSpan.innerText = '☕ استراحة';
-                statusSpan.className = 'font-bold text-orange-600';
-                breakDiv.classList.remove('hidden');
-            }
-            else { // Busy
-                statusSpan.innerText = '🔴 مشغول';
-                statusSpan.className = 'font-bold text-red-500';
-                
-                if (job) {
-                    workDiv.classList.remove('hidden');
-                    
-                    // Handle Dock Display
-                    const dockEl = document.getElementById('dockNumber');
-                    if (job.dock) {
-                        dockEl.innerText = job.dock.number;
-                        dockEl.className = 'text-4xl font-bold text-gray-800 mb-6';
-                    } else {
-                        dockEl.innerText = 'تم تحرير الدوك';
-                        dockEl.className = 'text-2xl font-bold text-orange-600 mb-6';
-                    }
-
-                    document.getElementById('companyName').innerText = job.companyName;
-                    document.getElementById('invoiceNumber').innerText = job.invoiceNumber;
-
-                    // Handle Buttons
-                    const btnContainer = document.querySelector('#workingState .grid');
-                    if (job.dock) {
-                         btnContainer.innerHTML = `
-                            <button onclick="finishJob('full')" class="bg-[#00A651] text-white py-3 rounded-lg font-bold hover:bg-[#008f45] transition shadow">
-                                ✅ تم الانتهاء <br><span class="text-xs font-normal opacity-80">(الدوك فاضي + أنا متاح)</span>
-                            </button>
-                            <button onclick="finishJob('dock_only')" class="bg-yellow-500 text-white py-3 rounded-lg font-bold hover:bg-yellow-600 transition shadow">
-                                 🚧 الدوك فاضي فقط <br><span class="text-xs font-normal opacity-80">(الدوك فاضي + أنا مشغول)</span>
-                            </button>
-                        `;
-                    } else {
-                        // Dock already released
-                         btnContainer.innerHTML = `
-                            <button onclick="finishJob('full')" class="col-span-2 bg-[#00A651] text-white py-3 rounded-lg font-bold hover:bg-[#008f45] transition shadow">
-                                ✅ إنهاء الاستلام بالكامل <br><span class="text-xs font-normal opacity-80">(أنا متاح)</span>
-                            </button>
-                        `;
-                    }
-
-                } else {
-                    busyIdleDiv.classList.remove('hidden');
-                }
-            }
-        }
-
-        window.finishJob = async (mode) => {
-            if (!confirm('هل أنت متأكد؟')) return;
-            try {
-                await auth.fetchWithAuth(`/api/storekeepers/${skId}/finish`, { 
-                    method: 'POST',
-                    body: JSON.stringify({ mode }) 
-                });
-                fetchStatus();
-            } catch (err) {
-                alert('Error');
-            }
-        };
-
-
-        window.finishJob = async (mode) => {
-  if (!confirm('هل أنت متأكد؟')) return;
-
-  try {
-    await auth.fetchWithAuth(`/api/storekeepers/${skId}/finish`, { 
-      method: 'POST',
-      body: JSON.stringify({ mode })
-    });
-
-    fetchStatus(); // نجاح فعلي
-  } catch (err) {
-    alert(err.message || 'فشل إنهاء الاستلام');
-  }
-};
-
-
-// window.toggleBreak = async (status) => {
-//   try {
-//     await auth.fetchWithAuth(`/api/storekeepers/${skId}/status`, {
-//       method: 'POST',
-//       body: JSON.stringify({ status })
-//     });
-
-//     fetchStatus(); // طالما مجاش Error يبقى تمام
-//   } catch (e) {
-//     alert(e.message || 'Error updating status');
-//   }
-// };
-
-
-window.toggleBreak = async (status) => {
-    // status is 'break' or 'available'
-    try {
-        const res = await auth.fetchWithAuth(`/api/storekeepers/${skId}/status`, {
-            method: 'POST',
-            body: JSON.stringify({ status })
-        });
-        if(res && res.ok) {
-            fetchStatus();
-        } else {
-            const d = await res.json();
-            alert(d.message || 'Error updating status');
-        }
-    } catch (e) {
-        console.error(e);
-        alert('Network Error');
-    }
-};
-
-window.resumeWork = async () => {
-    try {
-        const res = await auth.fetchWithAuth(`/api/storekeepers/${skId}/resume`, { method: 'POST' });
-        if(res && res.ok) {
-            // Status updated to busy.
-            fetchStatus();
-        } else {
-             const err = await res.json();
-             alert('Error resuming: ' + (err.message || res.statusText));
-        }
-    } catch(e) { console.error(e); alert('Network Error'); }
-};
-
-
-
-        // window.toggleBreak = async (status) => {
-        //     try {
-        //         const res = await auth.fetchWithAuth(`/api/storekeepers/${skId}/status`, {
-        //             method: 'POST',
-        //             body: JSON.stringify({ status })
-        //         });
-        //         if(res && res.ok) fetchStatus();
-        //         else alert('Error updating status');
-        //     } catch (e) { console.error(e); }
-        // };
-
-        // fetchStatus moved to onload
-        setInterval(() => {
-             if(auth.isLoggedIn()) fetchStatus();
-        }, 3000);
-    </script>
+    <script src="./storekeepper.js"></script>
 </body>
 </html>

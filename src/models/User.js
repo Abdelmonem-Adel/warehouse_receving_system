@@ -10,7 +10,7 @@ const userSchema = mongoose.Schema({
     status: { type: String, enum: ['available', 'busy', 'break'], default: 'available' },
     onBreak: { type: Boolean, default: false },
     lastTurnAt: { type: Date, default: new Date(0) },
-    priorityIndex: { type: Number, default: 999 } // Low priority default
+    priorityIndex: { type: Number, default: 999 } 
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

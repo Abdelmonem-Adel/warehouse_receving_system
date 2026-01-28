@@ -24,15 +24,21 @@ connectDB();
 app.use(cors());
 app.use(bodyParser.json());
 
-// ===== Serve Frontend =====
-app.use(express.static(path.join(__dirname, '../public')));
-
 // ===== API Routes =====
 app.use('/api', apiRoutes);
 
 app.get('/api/status', (req, res) => {
   res.json({ status: 'Server is running' });
 });
+
+// Error Handler
+app.use((err, req, res, next) => {
+  console.error('SERVER ERROR:', err.stack);
+  res.status(500).json({ message: 'Internal Server Error', error: err.message });
+});
+
+// ===== Serve Frontend =====
+app.use(express.static(path.join(__dirname, '../public')));
 
 // ===== Frontend Fallback =====
 app.get('*', (req, res) => {
