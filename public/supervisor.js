@@ -47,7 +47,7 @@ window.onload = () => {
                 return `
                 <div class="border-2 rounded p-2 text-center text-sm ${isAvailable ? 'border-green-500 bg-green-50 text-green-700' : 'border-red-500 bg-red-50 text-red-700'} relative">
                     <h3 class="font-bold">Dock ${dock.number}</h3>
-                    <p class="text-xs font-semibold mb-1">${isAvailable ? 'متاح' : 'مشغول'}</p>
+                    <p class="text-xs font-semibold mb-1">${isAvailable ? i18n.t('dock_status_available') : i18n.t('dock_status_busy')}</p>
                     ${dock.currentShipment ? `
                         <div class="text-xs text-gray-800 bg-white bg-opacity-50 rounded p-1">
                             <span class="block font-bold truncate" title="${dock.currentShipment.companyName}">${dock.currentShipment.companyName}</span>
@@ -65,7 +65,7 @@ window.onload = () => {
             countEl.textContent = receipts.length;
 
             if(receipts.length === 0) {
-               el.innerHTML = '<div class="col-span-1 md:col-span-2 text-center text-gray-500 py-4">لا توجد استلامات جارية</div>';
+               el.innerHTML = `<div class="col-span-1 md:col-span-2 text-center text-gray-500 py-4">${i18n.t('no_active_receipts')}</div>`;
                return;
             }
             
@@ -73,16 +73,16 @@ window.onload = () => {
                 <div class="border border-green-200 bg-green-50 rounded p-3 shadow-sm relative">
                     <div class="flex justify-between items-start mb-2">
                         <h3 class="font-bold text-gray-800">${r.companyName}</h3>
-                        <span class="bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full">جاري</span>
+                        <span class="bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full">${i18n.t('status_in_progress')}</span>
                     </div>
                     <div class="grid grid-cols-2 gap-2 text-xs text-gray-700">
-                        <div><span class="text-gray-500">الرصيف:</span> <b>${r.dockNumber?.number || r.dockNumber || '-'}</b></div>
-                        <div><span class="text-gray-500">الأمين:</span> <b>${r.keeperName}</b></div>
-                        <div><span class="text-gray-500">PO:</span> ${r.poNumber || '-'}</div>
-                        <div><span class="text-gray-500">القطع:</span> ${r.totalItems || '-'}</div>
+                        <div><span class="text-gray-500">${i18n.t('label_dock_short')}</span> <b>${r.dockNumber?.number || r.dockNumber || '-'}</b></div>
+                        <div><span class="text-gray-500">${i18n.t('label_sk_short')}</span> <b>${r.keeperName}</b></div>
+                        <div><span class="text-gray-500">${i18n.t('label_po_short')}</span> ${r.poNumber || '-'}</div>
+                        <div><span class="text-gray-500">${i18n.t('label_items_short')}</span> ${r.totalItems || '-'}</div>
                     </div>
                     <div class="mt-2 text-[10px] text-gray-500 text-left">
-                        بدأ: ${new Date(r.startedAt).toLocaleTimeString('ar-EG')}
+                        ${new Date(r.startedAt).toLocaleTimeString(i18n.currentLang === 'ar' ? 'ar-EG' : 'en-US')}
                     </div>
                 </div>
             `).join('');
@@ -95,7 +95,7 @@ window.onload = () => {
             countEl.textContent = receipts.length;
 
             if(receipts.length === 0) {
-                 el.innerHTML = '<div class="text-center text-gray-500 py-4">لا توجد استلامات منتهية حديثاً</div>';
+                 el.innerHTML = `<div class="text-center text-gray-500 py-4">${i18n.t('no_completed_receipts')}</div>`;
                  return;
             }
 
@@ -115,16 +115,16 @@ window.onload = () => {
                     </div>
                     <div class="flex gap-4 text-xs text-gray-600">
                          <div class="text-center">
-                            <span class="block text-gray-400 text-[10px]">القطع</span>
+                            <span class="block text-gray-400 text-[10px]">${i18n.t('label_items_short')}</span>
                             <span class="font-bold">${r.totalItems}</span>
                         </div>
                         <div class="text-center">
-                            <span class="block text-gray-400 text-[10px]">المدة</span>
-                            <span class="font-bold">${r.durationMinutes || 0} د</span>
+                            <span class="block text-gray-400 text-[10px]">${i18n.t('label_duration')}</span>
+                            <span class="font-bold">${r.durationMinutes || 0} ${i18n.t('label_duration_min')}</span>
                         </div>
                         <div class="text-center">
-                            <span class="block text-gray-400 text-[10px]">انتهى</span>
-                            <span class="font-bold">${new Date(r.endedAt).toLocaleTimeString('ar-EG')}</span>
+                            <span class="block text-gray-400 text-[10px]">${i18n.t('label_ended_at')}</span>
+                            <span class="font-bold">${new Date(r.endedAt).toLocaleTimeString(i18n.currentLang === 'ar' ? 'ar-EG' : 'en-US')}</span>
                         </div>
                     </div>
                 </div>
@@ -163,7 +163,7 @@ window.onload = () => {
         function renderSKStatus() {
             const el = document.getElementById('skList');
             if(storekeepers.length === 0) {
-                el.innerHTML = '<div class="text-center text-gray-500">لا يوجد أمناء</div>';
+                el.innerHTML = `<div class="text-center text-gray-500">${i18n.t('no_storekeepers')}</div>`;
                 return;
             }
 
@@ -177,13 +177,13 @@ window.onload = () => {
                 
                 if(s.status === 'available') {
                     badgeClass = 'bg-green-100 text-green-800 border-green-200';
-                    statusText = 'متاح 🟢';
+                    statusText = i18n.t('status_available');
                 } else if(s.status === 'busy') {
                     badgeClass = 'bg-red-100 text-red-800 border-red-200';
-                    statusText = 'مشغول 🔴';
+                    statusText = i18n.t('status_busy');
                 } else if(s.status === 'break') {
                     badgeClass = 'bg-yellow-100 text-yellow-800 border-yellow-200';
-                    statusText = 'استراحة ☕';
+                    statusText = i18n.t('status_break');
                 }
 
                 return `
@@ -212,7 +212,7 @@ window.onload = () => {
             };
             try {
                 const res = await auth.fetchWithAuth('/api/supervisor/transfer', { method: 'POST', body: JSON.stringify(d) });
-                if(res && res.ok) { alert('تم النقل بنجاح'); toggleTransferModal(); fetchData(); }
+                if(res && res.ok) { alert(i18n.t('alert_transfer_success')); toggleTransferModal(); fetchData(); }
                 else alert('Error');
             } catch(err) { console.error(err); }
         });

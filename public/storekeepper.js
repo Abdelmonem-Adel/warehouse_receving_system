@@ -38,13 +38,13 @@ function updateUI(sk, job) {
     
     // Update status text
     if (sk.status === 'available') {
-        statusSpan.innerText = '🟢 متاح';
+        statusSpan.innerText = i18n.t('status_available');
         statusSpan.className = 'font-bold text-green-600';
     } else if (sk.status === 'break') {
-        statusSpan.innerText = '☕ استراحة';
+        statusSpan.innerText = i18n.t('status_break');
         statusSpan.className = 'font-bold text-orange-600';
     } else { // busy
-        statusSpan.innerText = '🔴 مشغول';
+        statusSpan.innerText = i18n.t('status_busy');
         statusSpan.className = 'font-bold text-red-500';
     }
     
@@ -62,7 +62,7 @@ function updateUI(sk, job) {
             dockBtn.classList.add('hidden');
             fullBtn.classList.remove('hidden'); 
             itemsInput.classList.remove('hidden');
-            fullBtn.innerHTML = 'كلو خلص <br><span class="text-xs opacity-80">(الدوك فاضي + أنا متاح)</span>';
+            fullBtn.innerHTML = `${i18n.t('all_done')} <br><span class="text-xs opacity-80">${i18n.t('dock_empty_sk_busy')}</span>`;
 
             if (job && job.dock) {
                 // If we still have a dock, show BOTH buttons
@@ -70,7 +70,7 @@ function updateUI(sk, job) {
             } else {
                 // Dock is already released, only show full finish
                 dockBtn.classList.add('hidden');
-                fullBtn.innerHTML = 'انهاء الاستلامه <br><span class="text-xs opacity-80">(أنا متاح الآن)</span>';
+                fullBtn.innerHTML = `${i18n.t('finish_receipt')} <br><span class="text-xs opacity-80">${i18n.t('sk_available_now')}</span>`;
             }
         }
 
@@ -83,7 +83,7 @@ function updateUI(sk, job) {
             if (job.dock) {
                 document.getElementById('currentDock').innerText = 'Dock ' + (job.dock.number || '-');
             } else {
-                document.getElementById('currentDock').innerText = 'تم تحرير الدوك';
+                document.getElementById('currentDock').innerText = i18n.t('dock_released');
             }
         }
     } else {
@@ -96,7 +96,7 @@ function updateUI(sk, job) {
 }
 
 window.finishJob = async (mode) => {
-    if (!confirm('هل أنت متأكد؟')) return;
+    if (!confirm(i18n.t('alert_confirm'))) return;
     
     try {
         await auth.fetchWithAuth(`/api/storekeepers/${skId}/finish`, { 
@@ -105,7 +105,7 @@ window.finishJob = async (mode) => {
         });
         fetchStatus();
     } catch (err) {
-        alert(err.message || 'فشل إنهاء الاستلام');
+        alert(err.message || i18n.t('error_finish_failed'));
     }
 };
 
@@ -149,7 +149,7 @@ async function createReceipt() {
     const truckType = document.getElementById('receiptTruckType').value;
 
     if (!companyName || !dockNumber || !poNumber || !truckType) {
-        alert('⚠️ يرجى ملء جميع الحقول المطلوبة');
+        alert(i18n.t('alert_fill_required'));
         return;
     }
 
@@ -167,7 +167,7 @@ async function createReceipt() {
             document.getElementById('completionSection').classList.remove('hidden');
             document.getElementById('submitReceiptBtn').disabled = true;
             
-            alert('✅ تم البدء. من فضلك أدخل عدد القطع عند الانتهاء.');
+            alert(i18n.t('alert_start_success'));
             fetchStatus(); 
         } else if (res) {
             const data = await res.json();
@@ -180,17 +180,17 @@ async function createReceipt() {
 
 async function completeReceipt(mode) {
     if (!currentReceiptId) {
-        alert('لا توجد استلامة نشطة');
+        alert(i18n.t('alert_no_active_receipt'));
         return;
     }
 
     const totalItems = document.getElementById('receiptTotalItems').value;
     if (mode === 'full' && (!totalItems || totalItems <= 0)) {
-        alert('⚠️ يجب إدخال عدد القطع أولاً');
+        alert(i18n.t('alert_enter_items'));
         return;
     }
 
-    if (!confirm('هل أنت متأكد؟')) return;
+    if (!confirm(i18n.t('alert_confirm'))) return;
 
     try {
         const res = await auth.fetchWithAuth(`/api/receipts/${currentReceiptId}/complete`, {
@@ -199,7 +199,7 @@ async function completeReceipt(mode) {
         });
 
         if (res && res.ok) {
-            alert('✅ تم الحفظ بنجاح');
+            alert(i18n.t('alert_save_success'));
             
             // Reset UI
             if (mode === 'full') {

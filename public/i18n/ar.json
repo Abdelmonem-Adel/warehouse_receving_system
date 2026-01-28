@@ -1,0 +1,79 @@
+{
+    "title": "نظام إدارة المخازن | تسجيل الدخول",
+    "header": "نظام إدارة المخازن",
+    "username_placeholder": "اسم المستخدم",
+    "password_placeholder": "كلمة المرور",
+    "login_button": "تسجيل الدخول",
+    "error_msg": "بيانات خاطئة",
+    "supervisor_title": "لوحة المشرف (V5)",
+    "supervisor_header": "👀 لوحة المشرف",
+    "logout": "خروج",
+    "transfer_modal_title": "🔁 نقل/إعادة تعيين",
+    "transfer_modal_desc": "نقل الأمين لرصيف آخر أو العكس.",
+    "label_dock": "1. اختر الرصيف",
+    "label_sk": "2. اختر أمين المخزن",
+    "confirm_button": "تأكيد التعديل",
+    "docks_section_title": "🚛 حالة الأرصفة",
+    "sk_section_title": "👤 الأمناء",
+    "active_receipts_title": "🟢 استلامات جارية",
+    "history_title": "✅ تم الانتهاء",
+    "label_from": "من:",
+    "label_to": "إلى:",
+    "search_placeholder": "🔍 بحث (الشركة، الأمين، PO)...",
+    "export_excel": "📥 Export Excel",
+    "sk_title": "لوحة أمين المخزن",
+    "welcome_msg": "👷 أهلاً، ",
+    "status_label": "حالتك الحالية: ",
+    "open_receipt_title": "فتح استلامة",
+    "company_name_placeholder": "اسم الشركة",
+    "select_dock_placeholder": "اختر رصيف (Dock Number)",
+    "po_number_placeholder": "رقم الفاتورة (PO Number)",
+    "truck_type_placeholder": "نوع الشاحنة",
+    "truck_type_pickup": "دبابة",
+    "truck_type_jumbo": "جامبو",
+    "truck_type_tractor": "جرار",
+    "send_button": "ارسال",
+    "completion_header": "الانتهاء من الاستلام",
+    "total_items_placeholder": "إجمالي عدد القطع",
+    "dock_empty_btn": "الدوك فضي",
+    "dock_empty_desc": "(أنا لسه مستلم)",
+    "all_done_btn": "الكل خلص",
+    "all_done_desc": "(الدوك فاضي + أنا متاح)",
+    "current_job_header": "🔔 الشغل الحالي",
+    "dock_label": "الدوك:",
+    "company_label": "الشركة:",
+    "invoice_label": "رقم الفاتورة:",
+    "status_control_header": "التحكم في الحالة",
+    "break_btn": "☕ استراحة",
+    "available_btn": "✅ متاح",
+    "finish_receipt_header": "إنهاء الاستلام",
+    "status_available": "متاح 🟢",
+    "status_busy": "مشغول 🔴",
+    "status_break": "استراحة ☕",
+    "dock_status_available": "متاح",
+    "dock_status_busy": "مشغول",
+    "no_active_receipts": "لا توجد استلامات جارية",
+    "status_in_progress": "جاري",
+    "label_dock_short": "الرصيف:",
+    "label_sk_short": "الأمين:",
+    "label_po_short": "PO:",
+    "label_items_short": "القطع:",
+    "no_completed_receipts": "لا توجد استلامات منتهية حديثاً",
+    "label_duration": "المدة",
+    "label_duration_min": "د",
+    "label_ended_at": "انتهى",
+    "no_storekeepers": "لا يوجد أمناء",
+    "alert_transfer_success": "تم النقل بنجاح",
+    "alert_confirm": "هل أنت متأكد؟",
+    "alert_start_success": "✅ تم البدء. من فضلك أدخل عدد القطع عند الانتهاء.",
+    "alert_save_success": "✅ تم الحفظ بنجاح",
+    "dock_released": "تم تحرير الدوك",
+    "all_done": "الكل خلص",
+    "finish_receipt": "انهاء الاستلامه",
+    "dock_empty_sk_busy": "(الدوك فاضي + أنا متاح)",
+    "sk_available_now": "(أنا متاح الآن)",
+    "error_finish_failed": "فشل إنهاء الاستلام",
+    "alert_fill_required": "⚠️ يرجى ملء جميع الحقول المطلوبة",
+    "alert_no_active_receipt": "لا توجد استلامة نشطة",
+    "alert_enter_items": "⚠️ يجب إدخال عدد القطع أولاً"
+}

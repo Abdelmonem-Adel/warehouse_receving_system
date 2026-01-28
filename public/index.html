@@ -6,29 +6,30 @@
     <title>نظام إدارة المخازن | تسجيل الدخول</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Cairo', sans-serif; background-color: #f3f4f6; }
         .btn-primary { background-color: #00A651; color: white; }
         .btn-primary:hover { background-color: #008f45; }
     </style>
 </head>
 <body class="flex items-center justify-center h-screen bg-gray-100">
-    <div class="bg-white p-8 rounded-lg shadow-lg w-96 text-center">
-        <h1 class="text-2xl font-bold mb-6 text-gray-800">نظام إدارة المخازن</h1>
-        
-        <form id="loginForm" class="space-y-4">
-            <input type="text" id="username" placeholder="اسم المستخدم" class="w-full p-2 border rounded focus:outline-none focus:border-[#00A651]">
-            <input type="password" id="password" placeholder="كلمة المرور" class="w-full p-2 border rounded focus:outline-none focus:border-[#00A651]">
-            <button type="submit" class="btn-primary w-full py-2 rounded font-bold transition">تسجيل الدخول</button>
-            <p id="errorMsg" class="text-red-500 text-sm hidden">بيانات خاطئة</p>
-        </form>
-
-
-
+    <div class="absolute top-4 right-4 flex space-x-2 space-x-reverse">
+        <button onclick="i18n.switchLanguage('ar')" class="px-3 py-1 bg-white border rounded shadow-sm text-sm font-medium hover:bg-gray-50">العربية</button>
+        <button onclick="i18n.switchLanguage('en')" class="px-3 py-1 bg-white border rounded shadow-sm text-sm font-medium hover:bg-gray-50">English</button>
     </div>
 
-    
+    <div class="bg-white p-8 rounded-lg shadow-lg w-96 text-center">
+        <h1 data-i18n="header" class="text-2xl font-bold mb-6 text-gray-800">نظام إدارة المخازن</h1>
+        
+        <form id="loginForm" class="space-y-4">
+            <input type="text" id="username" data-i18n="username_placeholder" placeholder="اسم المستخدم" class="w-full p-2 border rounded focus:outline-none focus:border-[#00A651]">
+            <input type="password" id="password" data-i18n="password_placeholder" placeholder="كلمة المرور" class="w-full p-2 border rounded focus:outline-none focus:border-[#00A651]">
+            <button type="submit" data-i18n="login_button" class="btn-primary w-full py-2 rounded font-bold transition">تسجيل الدخول</button>
+            <p id="errorMsg" data-i18n="error_msg" class="text-red-500 text-sm hidden">بيانات خاطئة</p>
+        </form>
+    </div>
 
+    <script src="./js/i18n.js"></script>
     <script src="./index.js"></script>
 </body>
 </html>
