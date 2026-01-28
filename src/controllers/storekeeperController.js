@@ -1,10 +1,7 @@
 import User from '../models/User.js';
 import Receipts from '../models/Receipts.js';
 import Dock from '../models/Dock.js';
-// import Company from '../models/Company.js';
-// import PushSubscription from '../models/PushSubscription.js';
 import { tryAssign } from '../services/assignmentService.js';
-// import { getPublicKey } from '../services/notificationService.js';
 
 export const login = async (req, res) => {
     const { username, password } = req.body;
@@ -14,55 +11,6 @@ export const login = async (req, res) => {
         res.json(sk);
     } else {
         res.status(401).json({ message: 'Invalid credentials' });
-    }
-};
-
-
-export const finishJob = async (req, res) => {
-    const { id } = req.params; // Storekeeper ID
-    try {
-        const sk = await User.findById(id);
-        if (!sk) return res.status(404).json({ message: 'Not found' });
-        
-        if (sk.status !== 'busy') return res.status(400).json({ message: 'Not busy' });
-
-        // Free the Dock
-        const dock = await Dock.findOne({ assignedStorekeeper: sk._id });
-        if (dock) {
-            dock.status = 'available';
-            dock.assignedStorekeeper = null;
-            dock.currentShipment = null;
-            await dock.save();
-        }
-
-        // Free the SK
-        sk.status = 'available';
-        await sk.save();
-
-        // Trigger next assignment
-        await tryAssign();
-
-        res.json({ message: 'Job finished' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-export const subscribePush = async (req, res) => {
-    const { storekeeperId, subscription } = req.body;
-    try {
-        await PushSubscription.findOneAndUpdate(
-            { storekeeperId },
-            { 
-                storekeeperId,
-                endpoint: subscription.endpoint,
-                keys: subscription.keys
-            },
-            { upsert: true, new: true }
-        );
-        res.status(201).json({ message: 'Subscribed' });
-    } catch (error) {
-        res.status(400).json({ message: error.message });
     }
 };
 

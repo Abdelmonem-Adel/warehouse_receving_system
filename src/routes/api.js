@@ -13,7 +13,6 @@ import {
     getStorekeeperStatus, 
     setBreakStatus,
     finishJob, 
-    subscribePush,
     resumeWork,
 } from '../controllers/userController.js';
 import { createReceipt, completeReceipt, getAllReceipts } from '../controllers/storekeeperController.js';
@@ -47,7 +46,6 @@ router.get('/storekeepers',authMiddleware, roleMiddleware('supervisor'), getStor
 router.get('/storekeepers/:id/status',authMiddleware, roleMiddleware('storekeeper'), getStorekeeperStatus);
 router.post('/storekeepers/:id/finish',authMiddleware, roleMiddleware('storekeeper'), finishJob);
 router.post('/storekeepers/:id/resume',authMiddleware, roleMiddleware('storekeeper'), resumeWork);
-router.post('/storekeepers/subscribe',authMiddleware, roleMiddleware('storekeeper'), subscribePush);
 
 // Receipts
 router.post('/receipts',authMiddleware, roleMiddleware('storekeeper'), createReceipt);

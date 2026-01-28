@@ -27,7 +27,6 @@ window.onload = () => {
             // Renders
             renderDocks(docks);
             renderActiveReceipts(receipts.filter(r => r.status === 'in-progress'));
-            renderActiveReceipts(receipts.filter(r => r.status === 'in-progress'));
             
             // Store and Render History
             allCompletedReceipts = receipts.filter(r => r.status === 'completed');
@@ -157,18 +156,6 @@ window.onload = () => {
              });
         }
 
-        // ... renderWaiting & renderHistory same as before ... 
-        function renderWaiting(list) {
-            // Waiting Queue (Company-based) is now removed.
-            const el = document.getElementById('waitingList');
-            if (el) el.innerHTML = '<tr><td colspan="4" class="p-2 text-center text-gray-500">تم إلغاء نظام الانتظار المسبق</td></tr>';
-        }
-
-        /* 
-           NOTE: renderActive and renderHistory (old) are replaced by activeReceipts and historyReceipts.
-           The logic for waiting queue is kept.
-        */
-
         window.toggleManualModal = () => document.getElementById('manualModal').classList.toggle('hidden');
         window.toggleTransferModal = () => document.getElementById('transferModal').classList.toggle('hidden');
         
@@ -230,7 +217,6 @@ window.onload = () => {
             } catch(err) { console.error(err); }
         });
 
-        // fetchData call moved to window.onload with checkAuth
         // fetchData call moved to window.onload with checkAuth
         setInterval(() => {
             if(auth.isLoggedIn()) fetchData();

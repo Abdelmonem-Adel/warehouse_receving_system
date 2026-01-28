@@ -35,7 +35,6 @@ async function fetchStatus() {
 function updateUI(sk, job) {
     const statusSpan = document.getElementById('statusSpan');
     const jobInfo = document.getElementById('jobInfo');
-    const jobControls = document.getElementById('jobControls');
     
     // Update status text
     if (sk.status === 'available') {

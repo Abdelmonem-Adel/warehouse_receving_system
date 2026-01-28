@@ -1,11 +1,8 @@
 import User from '../models/User.js';
 import Dock from '../models/Dock.js';
 import Receipts from '../models/Receipts.js';
-// import PushSubscription from '../models/PushSubscription.js';
 import AuditLog from '../models/AuditLog.js';
-import { tryAssign, manualOverride } from '../services/assignmentService.js';
-// import { getPublicKey } from '../services/notificationService.js';
-
+import { tryAssign, manualOverride, transferJob } from '../services/assignmentService.js';
 import jwt from 'jsonwebtoken';
 
 export const login = async (req, res) => {
@@ -243,23 +240,3 @@ export const finishJob = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
-export const subscribePush = async (req, res) => {
-    const { storekeeperId, subscription } = req.body;
-    try {
-        await PushSubscription.findOneAndUpdate(
-            { storekeeperId },
-            { 
-                storekeeperId,
-                endpoint: subscription.endpoint,
-                keys: subscription.keys
-            },
-            { upsert: true, new: true }
-        );
-        res.status(201).json({ message: 'Subscribed' });
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-};
-
-

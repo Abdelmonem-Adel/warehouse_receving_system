@@ -1,15 +1,10 @@
 import Dock from '../models/Dock.js';
 import User from '../models/User.js';
-// import Company from '../models/Company.js';
 import AuditLog from '../models/AuditLog.js';
-// import { sendNotification } from './notificationService.js';
 
 export const tryAssign = async () => {
     try {
         console.log('Running Automatic Assignment logic (Currently Disabled - Manual Only)...');
-        // If we want to restore automatic queueing without 'Company', 
-        // we would need a new 'Queue' or 'Request' model.
-        // For now, removing company-based logic.
         return;
     } catch (e) {
         console.error('Assignment Error:', e);
@@ -26,11 +21,6 @@ const executeAssignment = async (dock, sk) => {
     sk.status = 'busy';
     sk.lastTurnAt = new Date();
     await sk.save();
-
-    // await sendNotification(sk._id, {
-    //     title: '🔔 دورك جه',
-    //     body: `Dock رقم ${dock.number}`
-    // });
 };
 
 export const manualOverride = async (supervisorName, dockId, storekeeperId) => {
@@ -51,12 +41,6 @@ export const manualOverride = async (supervisorName, dockId, storekeeperId) => {
 };
 
 export const transferJob = async (supervisorName, newDockId, newSkId) => {
-    // Find current dock of the new SK if they were already on one (unlikely but safe)
-    // Or find which dock the old SK was on.
-    
-    // For transfer, we usually want to move a SK to a different dock, or a dock to a different SK.
-    // Let's assume we are assigning a NEW manual state.
-    
     const newDock = await Dock.findById(newDockId);
     const newSk = await User.findById(newSkId);
 
