@@ -60,10 +60,22 @@
                 <input type="text" id="receiptPoNumber" data-i18n="po_number_placeholder" placeholder="رقم الفاتورة (PO Number)" class="w-full border border-gray-300 p-3 rounded" required>
                 <select id="receiptTruckType" class="w-full border border-gray-300 p-3 rounded" required>
                     <option value="" disabled selected data-i18n="truck_type_placeholder">نوع الشاحنة</option>
-                    <option value="دبابة" data-i18n="truck_type_pickup">دبابة</option>
-                    <option value="جامبو" data-i18n="truck_type_jumbo">جامبو</option>
-                    <option value="جرار" data-i18n="truck_type_tractor">جرار</option>
+                    <option value="Dabaaba" data-i18n="truck_type_pickup">دبابة</option>
+                    <option value="Jumbo" data-i18n="truck_type_jumbo">جامبو</option>
+                    <option value="Trailer" data-i18n="truck_type_tractor">جرار</option>
                 </select>
+                <select id="receiptCategory" class="w-full border border-gray-300 p-3 rounded" required>
+                    <option value="" disabled selected data-i18n="category_placeholder">النوع</option>
+                    <option value="Non Food" data-i18n="non_food">غير الغذائية</option>
+                    <option value="Food" data-i18n="food">غذائية</option>
+                    <option value="Water" data-i18n="water">ماء</option>
+                    <option value="Frozen" data-i18n="frozen">فريز</option>
+                    <option value="Bags" data-i18n="bags">شنط</option>
+                    <option value="Beauty" data-i18n="beauty">مستحضرات تجميل</option>
+                    <option value="Other" data-i18n="other">غير ذلك</option>
+                </select>
+                
+                
                 <button type="submit" id="submitReceiptBtn" data-i18n="send_button" class="w-full bg-green-600 text-white px-6 py-3 rounded font-bold hover:bg-green-700 transition">ارسال</button>
             </form>
 
@@ -71,6 +83,11 @@
             <div id="completionSection" class="hidden mt-6 pt-6 border-t border-gray-200 space-y-4">
                 <h3 data-i18n="completion_header" class="text-lg font-bold text-gray-700">الانتهاء من الاستلام</h3>
                 <input type="number" id="receiptTotalItems" data-i18n="total_items_placeholder" placeholder="إجمالي عدد القطع" class="w-full border border-gray-300 p-3 rounded" required>
+                <input type="text" id="receiptCartonNumber" data-i18n="carton_number_placeholder" placeholder="عدد الكراتين" class="w-full border border-gray-300 p-3 rounded" required>
+                <input type="text" id="receiptTruckNumber" data-i18n="truck_number_placeholder" placeholder="عدد الشاحنات" class="w-full border border-gray-300 p-3 rounded" required>
+                <input type="text" id="receiptSKUNumber" data-i18n="sku_number_placeholder" placeholder="عدد الأصناف" class="w-full border border-gray-300 p-3 rounded" required>
+                <input type="text" id="receiptBatchNumber" data-i18n="batch_number_placeholder" placeholder="عدد الباتش" class="w-full border border-gray-300 p-3 rounded" required>
+                <input type="text" id="receiptComment" data-i18n="comment_placeholder" placeholder="تعليق" class="w-full border border-gray-300 p-3 rounded" required>
                 
                 <div class="grid grid-cols-2  gap-4">
                     <button id="dockOnlyBtn" onclick="completeReceipt('dock_only')" class="bg-yellow-500 text-white px-6 py-3 rounded font-bold hover:bg-yellow-600 transition shadow">

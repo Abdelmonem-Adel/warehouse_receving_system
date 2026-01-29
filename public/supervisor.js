@@ -80,6 +80,7 @@ function renderActiveReceipts(receipts) {
                         <div><span class="text-gray-500">${i18n.t('label_sk_short')}</span> <b>${r.keeperName}</b></div>
                         <div><span class="text-gray-500">${i18n.t('label_po_short')}</span> ${r.poNumber || '-'}</div>
                         <div><span class="text-gray-500">${i18n.t('label_items_short')}</span> ${r.totalItems || '-'}</div>
+                        <div><span class="text-gray-500">${i18n.t('label_category_short')}</span> ${r.category || '-'}</div>
                     </div>
                     <div class="mt-2 text-[10px] text-gray-500 text-left">
                         ${new Date(r.startedAt).toLocaleTimeString(i18n.currentLang === 'ar' ? 'ar-EG' : 'en-US')}
@@ -114,9 +115,29 @@ function renderHistoryReceipts(receipts) {
                         <div class="text-xs text-blue-600">Dock ${r.dockNumber?.number || r.dockNumber || '-'} | ${r.keeperName}</div>
                     </div>
                     <div class="flex gap-4 text-xs text-gray-600">
+                        <div class="text-center">
+                            <span class="block text-gray-400 text-[10px]">${i18n.t('category_placeholder')}</span>
+                            <span class="font-bold">${r.category || '-'}</span>
+                        </div>
                          <div class="text-center">
-                            <span class="block text-gray-400 text-[10px]">${i18n.t('label_items_short')}</span>
+                            <span class="block text-gray-400 text-[10px]">${i18n.t('total_items_placeholder')}</span>
                             <span class="font-bold">${r.totalItems}</span>
+                        </div>
+                        <div class="text-center">
+                            <span class="block text-gray-400 text-[10px]">${i18n.t('carton_number_placeholder')}</span>
+                            <span class="font-bold">${r.cartonNumber}</span>
+                        </div>
+                        <div class="text-center">
+                            <span class="block text-gray-400 text-[10px]">${i18n.t('truck_number_placeholder')}</span>
+                            <span class="font-bold">${r.truckNumber}</span>
+                        </div>
+                        <div class="text-center">
+                            <span class="block text-gray-400 text-[10px]">${i18n.t('sku_number_placeholder')}</span>
+                            <span class="font-bold">${r.skuNumber}</span>
+                        </div>
+                        <div class="text-center">
+                            <span class="block text-gray-400 text-[10px]">${i18n.t('batch_number_placeholder')}</span>
+                            <span class="font-bold">${r.batchNumber}</span>
                         </div>
                         <div class="text-center">
                             <span class="block text-gray-400 text-[10px]">${i18n.t('label_duration')}</span>
@@ -217,15 +238,6 @@ document.getElementById('transferForm').addEventListener('submit', async (e) => 
     } catch (err) { console.error(err); }
 });
 
-
-// setInterval(() => { 
-//     const hasFilter =
-//         historySearch.value ||
-//         dateFrom.value ||
-//         dateTo.value;
-//     if(auth.isLoggedIn() && !hasFilter) fetchData();
-// }, 10000); 
-
 // --- Filter & Export Features (Updated with Date & PO) ---
 
 function getFilteredData() {
@@ -281,14 +293,21 @@ function exportToExcel() {
 
         // Format data for Excel
         const data = dataSource.map(r => ({
-            "الشركة": r.companyName,
-            "رصيف": r.dockNumber?.number || r.dockNumber || 'N/A',
-            "أمين المخزن": r.keeperName,
-            "عدد القطع": r.totalItems || 0,
-            "رقم الـ PO": r.poNumber || '',
-            "بداية الاستلام": new Date(r.startedAt).toLocaleString('ar-EG'),
-            "نهاية الاستلام": new Date(r.endedAt).toLocaleString('ar-EG'),
-            "المدة (دقيقة)": r.durationMinutes || 0
+            "Company": r.companyName,
+            "Dock": r.dockNumber?.number || r.dockNumber || 'N/A',
+            "Storekeeper": r.keeperName,
+            "PO Number": r.poNumber || '',
+            "Category": r.category || '-',
+            "Truck Type": r.truckType || '-',
+            "Truck Number": r.truckNumber || '-',
+            "Total Items": r.totalItems || 0,
+            "Carton Number": r.cartonNumber || '-',
+            "SKU Number": r.skuNumber || '-',
+            "Batch Number": r.batchNumber || '-',
+            "Start Time": new Date(r.startedAt).toLocaleString(),
+            "End Time": new Date(r.endedAt).toLocaleString(),
+            "Duration (min)": r.durationMinutes || 0,
+            "Comment": r.comment || '-',
         }));
 
         const ws = XLSX.utils.json_to_sheet(data, { rtl: true });

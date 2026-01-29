@@ -147,8 +147,9 @@ async function createReceipt() {
     const dockNumber = document.getElementById('receiptDockNumber').value.trim();
     const poNumber = document.getElementById('receiptPoNumber').value.trim();
     const truckType = document.getElementById('receiptTruckType').value;
+    const category = document.getElementById('receiptCategory').value;
 
-    if (!companyName || !dockNumber || !poNumber || !truckType) {
+    if (!companyName || !dockNumber || !poNumber || !truckType || !category) {
         alert(i18n.t('alert_fill_required'));
         return;
     }
@@ -156,12 +157,14 @@ async function createReceipt() {
     try {
         const res = await auth.fetchWithAuth('/api/receipts', {
             method: 'POST',
-            body: JSON.stringify({ companyName, dockNumber, poNumber, truckType })
+            body: JSON.stringify({ companyName, dockNumber, poNumber, truckType, category })
         });
 
         if (res && res.ok) {
+
             const receipt = await res.json();
             currentReceiptId = receipt._id;
+
             
             // Update UI State
             document.getElementById('completionSection').classList.remove('hidden');
@@ -185,7 +188,12 @@ async function completeReceipt(mode) {
     }
 
     const totalItems = document.getElementById('receiptTotalItems').value;
-    if (mode === 'full' && (!totalItems || totalItems <= 0)) {
+    const cartonNumber = document.getElementById('receiptCartonNumber').value;
+    const truckNumber = document.getElementById('receiptTruckNumber').value;
+    const skuNumber = document.getElementById('receiptSKUNumber').value;
+    const batchNumber = document.getElementById('receiptBatchNumber').value;
+    const comment = document.getElementById('receiptComment').value;
+    if (mode === 'full' && (!totalItems || totalItems <= 0 || !cartonNumber ||cartonNumber <= 0 || !truckNumber ||truckNumber <= 0 || !skuNumber ||skuNumber <= 0 || !batchNumber ||batchNumber <= 0 || !comment ||comment.trim() === '')) {
         alert(i18n.t('alert_enter_items'));
         return;
     }
@@ -195,7 +203,7 @@ async function completeReceipt(mode) {
     try {
         const res = await auth.fetchWithAuth(`/api/receipts/${currentReceiptId}/complete`, {
             method: 'PUT',
-            body: JSON.stringify({ totalItems, mode })
+            body: JSON.stringify({ totalItems,cartonNumber,truckNumber,skuNumber,batchNumber,comment, mode })
         });
 
         if (res && res.ok) {
@@ -205,6 +213,11 @@ async function completeReceipt(mode) {
             if (mode === 'full') {
                 document.getElementById('receiptForm').reset();
                 document.getElementById('receiptTotalItems').value = '';
+                document.getElementById('receiptCartonNumber').value = '';
+                document.getElementById('receiptTruckNumber').value = '';
+                document.getElementById('receiptSKUNumber').value = '';
+                document.getElementById('receiptBatchNumber').value = '';
+                document.getElementById('receiptComment').value = '';
                 document.getElementById('completionSection').classList.add('hidden');
                 document.getElementById('submitReceiptBtn').disabled = false;
                 currentReceiptId = null;

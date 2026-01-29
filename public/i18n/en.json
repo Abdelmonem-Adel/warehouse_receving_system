@@ -75,5 +75,20 @@
     "error_finish_failed": "Failed to finish receipt",
     "alert_fill_required": "⚠️ Please fill all required fields",
     "alert_no_active_receipt": "No active receipt found",
-    "alert_enter_items": "⚠️ You must enter the total items first"
+    "alert_enter_items": "⚠️ You must enter the total items first",
+    "category_placeholder": "Category",
+    "non_food": "Non Food",
+    "food": "Food",
+    "water": "Water",
+    "frozen": "Frozen",
+    "bags": "Bags",
+    "beauty": "Beauty",
+    "other": "Other",
+    "carton_number_placeholder": "Number of Cartons",
+    "truck_number_placeholder": "Number of Trucks",
+    "sku_number_placeholder": "Number of SKUs",
+    "batch_number_placeholder": "Number of Batches",
+    "comment_placeholder": "Comment"
+    
+
 }

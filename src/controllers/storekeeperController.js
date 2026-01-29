@@ -24,7 +24,7 @@ export const createReceipt = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const { companyName, dockNumber, poNumber, truckType } = req.body;
+        const { companyName, dockNumber, poNumber, truckType, category } = req.body; 
         
         // Find Dock
         const dock = await Dock.findOne({ number: dockNumber });
@@ -42,6 +42,7 @@ export const createReceipt = async (req, res) => {
             dockNumber: dock._id, // Use ID for ref
             poNumber, 
             truckType,
+            category,
             startedAt: new Date() 
         });
         console.log('Attempting to save receipt:', receipt);
@@ -68,7 +69,7 @@ export const completeReceipt = async (req, res) => {
     console.log('API: Complete Receipt', req.params.id);
     try {
         const { id } = req.params;
-        const { totalItems, mode } = req.body; // mode: 'full' or 'dock_only'
+        const { totalItems,cartonNumber,truckNumber,skuNumber,batchNumber,comment, mode } = req.body; // mode: 'full' or 'dock_only'
 
         const receipt = await Receipts.findById(id);
         if (!receipt) {
@@ -108,6 +109,11 @@ export const completeReceipt = async (req, res) => {
 
         // Update Receipt data
         receipt.totalItems = totalItems;
+        receipt.cartonNumber = cartonNumber;
+        receipt.truckNumber = truckNumber;
+        receipt.skuNumber = skuNumber;
+        receipt.batchNumber = batchNumber;
+        receipt.comment = comment;
         receipt.endedAt = new Date();
         if (receipt.startedAt) {
             const durationMs = receipt.endedAt - receipt.startedAt;

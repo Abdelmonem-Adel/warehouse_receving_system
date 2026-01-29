@@ -75,5 +75,18 @@
     "error_finish_failed": "فشل إنهاء الاستلام",
     "alert_fill_required": "⚠️ يرجى ملء جميع الحقول المطلوبة",
     "alert_no_active_receipt": "لا توجد استلامة نشطة",
-    "alert_enter_items": "⚠️ يجب إدخال عدد القطع أولاً"
+    "alert_enter_items": "⚠️ يجب إدخال عدد القطع أولاً",
+    "category_placeholder": "التصنيف",
+    "non_food": "غير الغذائية",
+    "food": "غذائية",
+    "water": "ماء",
+    "frozen": "فريز",
+    "bags": "شنط",
+    "beauty": "مستحضرات تجميل",
+    "other": "غير ذلك",
+    "carton_number_placeholder": "عدد الكراتين",
+    "truck_number_placeholder": "عدد الشاحنات",
+    "sku_number_placeholder": "عدد الأصناف",
+    "batch_number_placeholder": "عدد الباتش",
+    "comment_placeholder": "تعليق"
 }
