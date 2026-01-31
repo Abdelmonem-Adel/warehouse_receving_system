@@ -9,6 +9,7 @@ let storekeepers = [];
 const supervisorName = auth.getUser()?.name || 'Unknown';
 
 let allCompletedReceipts = []; // Store all history for filtering
+let filterDebounceTimer = null;
 
 async function fetchData() {
     // Removed /api/history and updated resources
@@ -100,15 +101,11 @@ function renderHistoryReceipts(receipts) {
         return;
     }
 
-    // If not filtered (no inputs set), and > 10, show only top 10. 
-    // Check if any filter is active
-    const hasFilter = document.getElementById('historySearch')?.value ||
-        document.getElementById('dateFrom')?.value ||
-        document.getElementById('dateTo')?.value;
+    // Limit rendering for performance (max 100 items)
+    const limit = 100;
+    const itemsToRender = receipts.slice(0, limit);
 
-    const limit = hasFilter ? receipts.length : 10;
-
-    el.innerHTML = receipts.slice(0, limit).map(r => `
+    el.innerHTML = itemsToRender.map(r => `
                 <div class="border-b border-gray-100 py-2 hover:bg-gray-50 flex flex-wrap justify-between items-center gap-2">
                     <div class="w-full md:w-auto">
                         <div class="font-bold text-gray-800 text-sm">${r.companyName}</div>
@@ -272,9 +269,12 @@ function getFilteredData() {
 }
 
 function filterHistory() {
-    const filtered = getFilteredData();
-    // Pass true to force showing all results of the filter
-    renderHistoryReceipts(filtered, true);
+    clearTimeout(filterDebounceTimer);
+    filterDebounceTimer = setTimeout(() => {
+        console.log('Filtering history...');
+        const filtered = getFilteredData();
+        renderHistoryReceipts(filtered);
+    }, 500); // 500ms delay
 }
 
 function exportToExcel() {
@@ -323,9 +323,15 @@ function exportToExcel() {
 
 
 setInterval(() => {
-    const hasFilter =
-        historySearch.value ||
-        dateFrom.value ||
-        dateTo.value;
-    if (auth.isLoggedIn() && !hasFilter) fetchData();
+    const searchInput = document.getElementById('historySearch');
+    const fromInput = document.getElementById('dateFrom');
+    const toInput = document.getElementById('dateTo');
+
+    if (!searchInput || !fromInput || !toInput) return;
+
+    const hasFilter = searchInput.value || fromInput.value || toInput.value;
+
+    if (auth.isLoggedIn() && !hasFilter) {
+        fetchData();
+    }
 }, 10000);

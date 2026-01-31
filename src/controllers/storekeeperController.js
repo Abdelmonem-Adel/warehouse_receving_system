@@ -164,7 +164,10 @@ export const completeReceipt = async (req, res) => {
 
 export const getAllReceipts = async (req, res) => {
     try {
-        const receipts = await Receipts.find().sort({ createdAt: -1 }).populate('dockNumber');
+        const receipts = await Receipts.find()
+            .sort({ createdAt: -1 })
+            .limit(1000)
+            .populate('dockNumber');
         res.json(receipts);
     } catch (error) {
         res.status(500).json({ message: error.message });
