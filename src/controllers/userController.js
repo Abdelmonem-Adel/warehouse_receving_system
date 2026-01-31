@@ -15,7 +15,7 @@ export const login = async (req, res) => {
         return res.status(400).json({ message: 'Missing credentials' });
     }
 
-    
+
     const user = await User.findOne({ username });
     console.log('DB USER FOUND:', user ? user.username : 'NULL');
 
@@ -24,7 +24,7 @@ export const login = async (req, res) => {
         return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-   
+
     if (String(user.password) !== String(password)) {
         console.log('FAIL: Password mismatch');
         return res.status(401).json({ message: 'Invalid credentials' });
@@ -33,8 +33,8 @@ export const login = async (req, res) => {
     console.log('SUCCESS: Login valid');
     const token = jwt.sign(
         {
-          id: user._id,
-          role: user.role
+            id: user._id,
+            role: user.role
         },
         process.env.JWT_SECRET,
         { expiresIn: '24h' }
@@ -43,13 +43,13 @@ export const login = async (req, res) => {
     res.json({
         token,
         user: {
-          id: user._id,
-          name: user.name,
-          role: user.role
+            id: user._id,
+            name: user.name,
+            role: user.role
         }
     });
 
-    
+
 };
 
 // Admin
@@ -65,7 +65,7 @@ export const createUser = async (req, res) => {
 export const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const updated = await User.findByIdAndUpdate(id, req.body, { new: true });
         res.json(updated);
     } catch (error) {
@@ -109,7 +109,7 @@ export const manualReassign = async (req, res) => {
 };
 
 export const reorderStorekeepers = async (req, res) => {
-    const { order } = req.body; 
+    const { order } = req.body;
     try {
         for (let i = 0; i < order.length; i++) {
             await User.findByIdAndUpdate(order[i], { priorityIndex: i + 1 });
@@ -135,10 +135,10 @@ export const getStorekeeperStatus = async (req, res) => {
         let activeReceiptId = null;
         if (sk.status === 'busy') {
             const dock = await Dock.findOne({ assignedStorekeeper: sk._id, status: 'busy' });
-            
+
             // Find the active receipt
-            const receipt = await Receipts.findOne({ keeperName: sk.name, status: 'in-progress' }).sort({ createdAt: -1 });
-            
+            const receipt = await Receipts.findOne({ keeperId: sk._id, status: 'in-progress' }).sort({ createdAt: -1 });
+
             if (dock || receipt) {
                 currentJob = {
                     dock: dock,
@@ -157,14 +157,14 @@ export const getStorekeeperStatus = async (req, res) => {
 export const setBreakStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body; // 'available' or 'break'
-    
+
     try {
         const sk = await User.findById(id);
         if (!sk) return res.status(404).json({ message: 'Not found' });
 
         // If trying to take a break while busy
         if (status === 'break' && sk.status === 'busy') {
-            
+
             return res.status(400).json({ message: 'Cannot go to break while busy.' });
         }
 
@@ -198,21 +198,21 @@ export const resumeWork = async (req, res) => {
 };
 
 export const finishJob = async (req, res) => {
-    const { id } = req.params; 
-    const { mode } = req.body; 
+    const { id } = req.params;
+    const { mode } = req.body;
 
     try {
         const sk = await User.findById(id);
         if (!sk) return res.status(404).json({ message: 'Not found' });
-        
+
         await AuditLog.create({
-            supervisorName: sk.name, 
+            supervisorName: sk.name,
             action: 'FINISH_JOB',
             details: `Finished job with mode: ${mode}`
         });
 
         const dock = await Dock.findOne({ assignedStorekeeper: sk._id });
-        
+
         if (mode === 'dock_only') {
             if (dock) {
                 dock.status = 'available';

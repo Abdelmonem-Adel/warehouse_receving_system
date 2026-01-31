@@ -137,7 +137,7 @@ function renderHistoryReceipts(receipts) {
                         </div>
                         <div class="text-center">
                             <span class="block text-gray-400 text-[10px]">${i18n.t('batch_number_placeholder')}</span>
-                            <span class="font-bold">${r.batchNumber}</span>
+                            <span class="font-bold">${r.palletNumber}</span>
                         </div>
                         <div class="text-center">
                             <span class="block text-gray-400 text-[10px]">${i18n.t('label_duration')}</span>
@@ -303,7 +303,7 @@ function exportToExcel() {
             "Total Items": r.totalItems || 0,
             "Carton Number": r.cartonNumber || '-',
             "SKU Number": r.skuNumber || '-',
-            "Batch Number": r.batchNumber || '-',
+            "Batch Number": r.palletNumber || '-',
             "Start Time": new Date(r.startedAt).toLocaleString(),
             "End Time": new Date(r.endedAt).toLocaleString(),
             "Duration (min)": r.durationMinutes || 0,
@@ -328,4 +328,4 @@ setInterval(() => {
         dateFrom.value ||
         dateTo.value;
     if (auth.isLoggedIn() && !hasFilter) fetchData();
-}, 10000); 
+}, 10000);

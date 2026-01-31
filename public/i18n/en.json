@@ -87,8 +87,7 @@
     "carton_number_placeholder": "Number of Cartons",
     "truck_number_placeholder": "Number of Trucks",
     "sku_number_placeholder": "Number of SKUs",
-    "batch_number_placeholder": "Number of Batches",
-    "comment_placeholder": "Comment"
-    
-
+    "pallet_number_placeholder": "Number of Pallets",
+    "comment_placeholder": "Comment",
+    "session_changed_alert": "Sorry, another user logged in on a different window. The page will reload."
 }

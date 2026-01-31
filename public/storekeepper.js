@@ -2,7 +2,7 @@
 window.onload = () => {
     auth.checkAuth(['storekeeper']);
     const user = auth.getUser();
-    if(user) {
+    if (user) {
         document.getElementById('skNameSpan').innerText = user.name;
     }
     fetchStatus();
@@ -14,8 +14,8 @@ let currentReceiptId = null;
 async function fetchStatus() {
     try {
         const res = await auth.fetchWithAuth(`/api/storekeepers/${skId}/status`);
-        if(!res) return;
-        
+        if (!res) return;
+
         if (!res.ok) {
             const errorText = await res.text();
             console.error('Status fetch failed:', res.status, errorText);
@@ -23,6 +23,15 @@ async function fetchStatus() {
         }
 
         const data = await res.json();
+
+        // Security check: If the user ID in memory doesn't match the one in localStorage
+        const currentLocalUser = auth.getUser();
+        if (currentLocalUser && currentLocalUser.id !== skId) {
+            alert(i18n.t('session_changed_alert') || 'Session changed. Page will reload.');
+            window.location.reload();
+            return;
+        }
+
         if (data.activeReceiptId) {
             currentReceiptId = data.activeReceiptId;
         }
@@ -35,7 +44,7 @@ async function fetchStatus() {
 function updateUI(sk, job) {
     const statusSpan = document.getElementById('statusSpan');
     const jobInfo = document.getElementById('jobInfo');
-    
+
     // Update status text
     if (sk.status === 'available') {
         statusSpan.innerText = i18n.t('status_available');
@@ -47,7 +56,7 @@ function updateUI(sk, job) {
         statusSpan.innerText = i18n.t('status_busy');
         statusSpan.className = 'font-bold text-red-500';
     }
-    
+
     // Show/hide job info and controls based on status
     if (sk.status === 'busy') {
         if (currentReceiptId) {
@@ -60,7 +69,7 @@ function updateUI(sk, job) {
 
             // Reset visibility
             dockBtn.classList.add('hidden');
-            fullBtn.classList.remove('hidden'); 
+            fullBtn.classList.remove('hidden');
             itemsInput.classList.remove('hidden');
             fullBtn.innerHTML = `${i18n.t('all_done')} <br><span class="text-xs opacity-80">${i18n.t('dock_empty_sk_busy')}</span>`;
 
@@ -79,7 +88,7 @@ function updateUI(sk, job) {
             jobInfo.classList.remove('hidden');
             document.getElementById('currentCompany').innerText = job.companyName || 'Unknown';
             document.getElementById('currentInvoice').innerText = job.poNumber || job.invoiceNumber || '-';
-            
+
             if (job.dock) {
                 document.getElementById('currentDock').innerText = 'Dock ' + (job.dock.number || '-');
             } else {
@@ -91,15 +100,15 @@ function updateUI(sk, job) {
         jobInfo.classList.add('hidden');
         document.getElementById('completionSection').classList.add('hidden');
         document.getElementById('submitReceiptBtn').disabled = false;
-        currentReceiptId = null; 
+        currentReceiptId = null;
     }
 }
 
 window.finishJob = async (mode) => {
     if (!confirm(i18n.t('alert_confirm'))) return;
-    
+
     try {
-        await auth.fetchWithAuth(`/api/storekeepers/${skId}/finish`, { 
+        await auth.fetchWithAuth(`/api/storekeepers/${skId}/finish`, {
             method: 'POST',
             body: JSON.stringify({ mode })
         });
@@ -115,7 +124,7 @@ window.toggleBreak = async (status) => {
             method: 'POST',
             body: JSON.stringify({ status })
         });
-        if(res && res.ok) {
+        if (res && res.ok) {
             fetchStatus();
         } else {
             const d = await res.json();
@@ -130,15 +139,15 @@ window.toggleBreak = async (status) => {
 window.resumeWork = async () => {
     try {
         const res = await auth.fetchWithAuth(`/api/storekeepers/${skId}/resume`, { method: 'POST' });
-        if(res && res.ok) {
+        if (res && res.ok) {
             fetchStatus();
         } else {
             const err = await res.json();
             alert('Error resuming: ' + (err.message || res.statusText));
         }
-    } catch(e) { 
-        console.error(e); 
-        alert('Network Error'); 
+    } catch (e) {
+        console.error(e);
+        alert('Network Error');
     }
 };
 
@@ -165,13 +174,13 @@ async function createReceipt() {
             const receipt = await res.json();
             currentReceiptId = receipt._id;
 
-            
+
             // Update UI State
             document.getElementById('completionSection').classList.remove('hidden');
             document.getElementById('submitReceiptBtn').disabled = true;
-            
+
             alert(i18n.t('alert_start_success'));
-            fetchStatus(); 
+            fetchStatus();
         } else if (res) {
             const data = await res.json();
             alert(data.message || 'فشل البدء');
@@ -191,9 +200,11 @@ async function completeReceipt(mode) {
     const cartonNumber = document.getElementById('receiptCartonNumber').value;
     const truckNumber = document.getElementById('receiptTruckNumber').value;
     const skuNumber = document.getElementById('receiptSKUNumber').value;
-    const batchNumber = document.getElementById('receiptBatchNumber').value;
+    const palletNumber = document.getElementById('receiptpalletNumber').value;
     const comment = document.getElementById('receiptComment').value;
-    if (mode === 'full' && (!totalItems || totalItems <= 0 || !cartonNumber ||cartonNumber <= 0 || !truckNumber ||truckNumber <= 0 || !skuNumber ||skuNumber <= 0 || !batchNumber ||batchNumber <= 0 || !comment ||comment.trim() === '')) {
+
+    // Validation
+    if (mode === 'full' && (!totalItems || totalItems <= 0 || !comment || comment.trim() === '')) {
         alert(i18n.t('alert_enter_items'));
         return;
     }
@@ -203,12 +214,20 @@ async function completeReceipt(mode) {
     try {
         const res = await auth.fetchWithAuth(`/api/receipts/${currentReceiptId}/complete`, {
             method: 'PUT',
-            body: JSON.stringify({ totalItems,cartonNumber,truckNumber,skuNumber,batchNumber,comment, mode })
+            body: JSON.stringify({
+                totalItems,
+                cartonNumber,
+                truckNumber,
+                skuNumber,
+                palletNumber,
+                comment,
+                mode
+            })
         });
 
         if (res && res.ok) {
             alert(i18n.t('alert_save_success'));
-            
+
             // Reset UI
             if (mode === 'full') {
                 document.getElementById('receiptForm').reset();
@@ -216,13 +235,13 @@ async function completeReceipt(mode) {
                 document.getElementById('receiptCartonNumber').value = '';
                 document.getElementById('receiptTruckNumber').value = '';
                 document.getElementById('receiptSKUNumber').value = '';
-                document.getElementById('receiptBatchNumber').value = '';
+                document.getElementById('receiptpalletNumber').value = '';
                 document.getElementById('receiptComment').value = '';
                 document.getElementById('completionSection').classList.add('hidden');
                 document.getElementById('submitReceiptBtn').disabled = false;
                 currentReceiptId = null;
             }
-            
+
             fetchStatus();
         } else if (res) {
             const data = await res.json();
@@ -235,5 +254,5 @@ async function completeReceipt(mode) {
 
 // Auto-refresh status every 3 seconds
 setInterval(() => {
-    if(auth.isLoggedIn()) fetchStatus();
+    if (auth.isLoggedIn()) fetchStatus();
 }, 3000);

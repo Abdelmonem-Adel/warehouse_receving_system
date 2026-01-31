@@ -6,7 +6,7 @@ import { tryAssign } from '../services/assignmentService.js';
 export const login = async (req, res) => {
     const { username, password } = req.body;
     const sk = await User.findOne({ username });
-    
+
     if (sk && sk.password === password) {
         res.json(sk);
     } else {
@@ -24,26 +24,27 @@ export const createReceipt = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const { companyName, dockNumber, poNumber, truckType, category } = req.body; 
-        
+        const { companyName, dockNumber, poNumber, truckType, category } = req.body;
+
         // Find Dock
         const dock = await Dock.findOne({ number: dockNumber });
         if (!dock) {
-             return res.status(404).json({ message: `Dock ${dockNumber} not found` });
+            return res.status(404).json({ message: `Dock ${dockNumber} not found` });
         }
 
         if (dock.status === 'busy') {
             return res.status(400).json({ message: `Dock ${dockNumber} is already in use` });
         }
 
-        const receipt = new Receipts({ 
-            keeperName: sk.name, 
-            companyName, 
+        const receipt = new Receipts({
+            keeperName: sk.name,
+            keeperId: sk._id,
+            companyName,
             dockNumber: dock._id, // Use ID for ref
-            poNumber, 
+            poNumber,
             truckType,
             category,
-            startedAt: new Date() 
+            startedAt: new Date()
         });
         console.log('Attempting to save receipt:', receipt);
         await receipt.save();
@@ -69,18 +70,33 @@ export const completeReceipt = async (req, res) => {
     console.log('API: Complete Receipt', req.params.id);
     try {
         const { id } = req.params;
-        const { totalItems,cartonNumber,truckNumber,skuNumber,batchNumber,comment, mode } = req.body; // mode: 'full' or 'dock_only'
+        const { totalItems, cartonNumber, truckNumber, skuNumber, palletNumber, comment, mode } = req.body; // mode: 'full' or 'dock_only'
 
         const receipt = await Receipts.findById(id);
         if (!receipt) {
-            console.error('CompleteReceipt: Receipt not found', id);
+            console.error('CompleteReceipt: Receipt NOT FOUND', id);
             return res.status(404).json({ message: 'Receipt not found' });
         }
 
-        // Verify the receipt belongs to the logged-in keeper
-        const sk = await User.findById(req.user.id);
-        if (!sk || receipt.keeperName !== sk.name) {
-            console.error('CompleteReceipt: Unauthorized', receipt.keeperName, sk?.name);
+        // Verify the receipt belongs to the logged-in keeper using ID (or name for legacy)
+        const currentUserId = req.user.id.toString();
+        const receiptKeeperId = receipt.keeperId ? receipt.keeperId.toString() : null;
+
+        let isAuthorized = false;
+        if (receiptKeeperId) {
+            isAuthorized = (receiptKeeperId === currentUserId);
+        } else {
+            // Legacy fallback: Fetch user name
+            const user = await User.findById(currentUserId);
+            isAuthorized = (user && receipt.keeperName === user.name);
+        }
+
+        if (!isAuthorized) {
+            console.error('CompleteReceipt: Unauthorized', {
+                receiptKeeperId,
+                receiptKeeperName: receipt.keeperName,
+                requestId: currentUserId
+            });
             return res.status(403).json({ message: 'Unauthorized' });
         }
 
@@ -90,7 +106,7 @@ export const completeReceipt = async (req, res) => {
 
         // --- DOCK ONLY MODE ---
         if (mode === 'dock_only') {
-            const dock = await Dock.findOne({ assignedStorekeeper: sk._id });
+            const dock = await Dock.findOne({ assignedStorekeeper: currentUserId });
             if (dock) {
                 console.log(`Releasing Dock ${dock.number} (Dock Only Mode)`);
                 dock.status = 'available';
@@ -98,7 +114,6 @@ export const completeReceipt = async (req, res) => {
                 dock.currentShipment = null;
                 await dock.save();
             }
-            // SK stays BUSY, receipt stays IN-PROGRESS
             return res.json({ message: 'Dock released, continuing receipt count' });
         }
 
@@ -112,7 +127,7 @@ export const completeReceipt = async (req, res) => {
         receipt.cartonNumber = cartonNumber;
         receipt.truckNumber = truckNumber;
         receipt.skuNumber = skuNumber;
-        receipt.batchNumber = batchNumber;
+        receipt.palletNumber = palletNumber;
         receipt.comment = comment;
         receipt.endedAt = new Date();
         if (receipt.startedAt) {
@@ -122,7 +137,7 @@ export const completeReceipt = async (req, res) => {
         receipt.status = 'completed';
         await receipt.save();
 
-        const dock = await Dock.findOne({ assignedStorekeeper: sk._id });
+        const dock = await Dock.findOne({ assignedStorekeeper: currentUserId });
         if (dock) {
             console.log(`Releasing Dock ${dock.number} (Full Completion)`);
             dock.status = 'available';
@@ -131,14 +146,18 @@ export const completeReceipt = async (req, res) => {
             await dock.save();
         }
 
-        sk.status = 'available';
-        await sk.save();
-        await tryAssign();
-        console.log(`CompleteReceipt (Full): SK ${sk.name} available.`);
+        // Update User status
+        await User.findByIdAndUpdate(currentUserId, { status: 'available' });
+
+        try {
+            await tryAssign();
+        } catch (assignError) {
+            console.error('CompleteReceipt: tryAssign() error (non-fatal)', assignError);
+        }
 
         res.json(receipt);
     } catch (error) {
-        console.error('CompleteReceipt: Error', error);
+        console.error('[DEBUG] CompleteReceipt: CRITICAL ERROR', error);
         res.status(500).json({ message: error.message });
     }
 };

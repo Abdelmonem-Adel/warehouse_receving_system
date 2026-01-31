@@ -87,6 +87,7 @@
     "carton_number_placeholder": "عدد الكراتين",
     "truck_number_placeholder": "عدد الشاحنات",
     "sku_number_placeholder": "عدد الأصناف",
-    "batch_number_placeholder": "عدد الباتش",
-    "comment_placeholder": "تعليق"
+    "pallet_number_placeholder": "عدد الباليت",
+    "comment_placeholder": "تعليق",
+    "session_changed_alert": "عذراً، تم تسجيل دخول مستخدم آخر في نافذة أخرى. سيتم إعادة تحميل الصفحة."
 }
