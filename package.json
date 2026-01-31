@@ -2,7 +2,7 @@
   "name": "warehouse-receiving-system",
   "version": "1.0.0",
   "description": "Warehouse Receiving Management System",
-  "main": "server.js",
+  "main": "src/server.js",
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
