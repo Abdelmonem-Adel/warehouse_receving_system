@@ -38,11 +38,11 @@ app.use((err, req, res, next) => {
 });
 
 // ===== Serve Frontend =====
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, '../../Frontend')));
 
 // ===== Frontend Fallback =====
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+  res.sendFile(path.join(__dirname, '../../Frontend/index.html'));
 });
 
 // ===== Start Server =====

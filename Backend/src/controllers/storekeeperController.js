@@ -118,17 +118,16 @@ export const completeReceipt = async (req, res) => {
         }
 
         // --- FULL COMPLETE MODE ---
-        if (!totalItems) {
-            return res.status(400).json({ message: 'Total items is required to complete receipt.' });
-        }
+        // Relaxed validation: Allow missing or 0 totalItems
+        const finalTotalItems = totalItems || 0;
 
         // Update Receipt data
-        receipt.totalItems = totalItems;
-        receipt.cartonNumber = cartonNumber;
-        receipt.truckNumber = truckNumber;
-        receipt.skuNumber = skuNumber;
-        receipt.palletNumber = palletNumber;
-        receipt.comment = comment;
+        receipt.totalItems = finalTotalItems;
+        receipt.cartonNumber = cartonNumber || 0;
+        receipt.truckNumber = truckNumber || 1;
+        receipt.skuNumber = skuNumber || 0;
+        receipt.palletNumber = palletNumber || 0;
+        receipt.comment = comment || "";
         receipt.endedAt = new Date();
         if (receipt.startedAt) {
             const durationMs = receipt.endedAt - receipt.startedAt;

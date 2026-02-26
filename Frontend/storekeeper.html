@@ -1,0 +1,514 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="./images/icons8-storekeeper-96.png">
+    <title>لوحة أمين المخزن</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Cairo', sans-serif; background-color: #f3f4f6; }
+    </style>
+    <script src="js/i18n.js"></script>
+    <script src="js/auth.js"></script>
+</head>
+<body class="p-6">
+    
+    <header class="flex justify-between items-center mb-8 bg-white p-4 rounded shadow">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800"><span data-i18n="welcome_msg">👷 أهلاً، </span><span id="skNameSpan"></span></h1>
+            <p class="text-sm text-gray-500"><span data-i18n="status_label">حالتك الحالية: </span><span id="statusSpan" class="font-bold">...</span></p>
+        </div>
+
+
+        <div class="flex items-center space-x-4">
+            <!-- Language Switcher -->
+            <div class="flex space-x-2">
+                <button onclick="i18n.switchLanguage('ar')" class="px-2 py-1 bg-white border border-gray-300 rounded shadow-sm text-xs font-medium hover:bg-gray-50 transition-colors">
+                    العربية
+                </button>
+                <button onclick="i18n.switchLanguage('en')" class="px-2 py-1 bg-white border border-gray-300 rounded shadow-sm text-xs font-medium hover:bg-gray-50 transition-colors">
+                    English
+                </button>
+            </div>
+
+        <div>
+            <a href="#" onclick="auth.logout()" data-i18n="logout" class="text-red-500 text-sm">تسجيل خروج</a>
+        </div>
+    </header>
+
+    <div class="max-w-2xl mx-auto space-y-6">
+        <!-- Receipt Form -->
+        <div class="bg-white rounded shadow-lg p-6">
+            <h2 data-i18n="open_receipt_title" class="text-2xl font-bold text-gray-700 mb-4 text-center">فتح استلامة</h2>
+            <form id="receiptForm" onsubmit="createReceipt(); return false;" class="space-y-4">
+                <!-- قائمة منسدلة لاسم المورد -->
+                <select id="receiptCompanyName" class="w-full border border-gray-300 p-3 rounded" required>
+                    <option value="" disabled selected data-i18n="company_name_placeholder">Supplier Name / اسم المورد</option>
+                    <option value="2H Hossam Shalaby">2H Hossam Shalaby</option>
+                    <option value="3g home">3g home</option>
+                    <option value="3G Home">3G Home</option>
+                    <option value="4ANUTRITION">4ANUTRITION</option>
+                    <option value="A Y M">A Y M</option>
+                    <option value="A4M Alwahaibi">A4M Alwahaibi</option>
+                    <option value="Abu Auf">Abu Auf</option>
+                    <option value="Adams">Adams</option>
+                    <option value="adams">adams</option>
+                    <option value="ADAMS">ADAMS</option>
+                    <option value="Adco">Adco</option>
+                    <option value="Add Me">Add Me</option>
+                    <option value="afams">afams</option>
+                    <option value="affi food">affi food</option>
+                    <option value="Affi food">Affi food</option>
+                    <option value="Affi foods">Affi foods</option>
+                    <option value="AFFI Foods">AFFI Foods</option>
+                    <option value="Agro Corp (Foody) - أجروكورب للإستثمار الزراعي">Agro Corp (Foody) - أجروكورب للإستثمار الزراعي</option>
+                    <option value="Agyad">Agyad</option>
+                    <option value="Air Comfort">Air Comfort</option>
+                    <option value="Al Amir">Al Amir</option>
+                    <option value="Al Mohmdiya">Al Mohmdiya</option>
+                    <option value="Al Mostafa مؤسسة المصطفى">Al Mostafa مؤسسة المصطفى</option>
+                    <option value="Al Oroba">Al Oroba</option>
+                    <option value="Al Sharq">Al Sharq</option>
+                    <option value="Al Suhagy">Al Suhagy</option>
+                    <option value="Al Tahhan">Al Tahhan</option>
+                    <option value="Al-Abd">Al-Abd</option>
+                    <option value="alex bakaries">alex bakaries</option>
+                    <option value="Alex bakery">Alex bakery</option>
+                    <option value="Alex Bakery">Alex Bakery</option>
+                    <option value="alex bakery">alex bakery</option>
+                    <option value="alexbakery">alexbakery</option>
+                    <option value="AL-Fath">AL-Fath</option>
+                    <option value="Al-Haramin">Al-Haramin</option>
+                    <option value="Almarai CM">Almarai CM</option>
+                    <option value="almarai green - المراعى الخضراء">almarai green - المراعى الخضراء</option>
+                    <option value="al-mine">al-mine</option>
+                    <option value="AlMohmdiya">AlMohmdiya</option>
+                    <option value="Amazing For Supply">Amazing For Supply</option>
+                    <option value="Americana CM">Americana CM</option>
+                    <option value="Americana Snacks شركة سنيوريتا للصناعات الغذائيه">Americana Snacks شركة سنيوريتا للصناعات الغذائيه</option>
+                    <option value="Arise">Arise</option>
+                    <option value="ARM CARE">ARM CARE</option>
+                    <option value="Arma Detergent">Arma Detergent</option>
+                    <option value="Arma Food">Arma Food</option>
+                    <option value="arma food">arma food</option>
+                    <option value="ASG">ASG</option>
+                    <option value="Avantic">Avantic</option>
+                    <option value="Avrelle">Avrelle</option>
+                    <option value="Ayman Afandi">Ayman Afandi</option>
+                    <option value="Bab ElSham">Bab ElSham</option>
+                    <option value="bakier">bakier</option>
+                    <option value="Bayoumi">Bayoumi</option>
+                    <option value="Bel Group">Bel Group</option>
+                    <option value="benchmark">benchmark</option>
+                    <option value="Benchmark">Benchmark</option>
+                    <option value="best food">best food</option>
+                    <option value="Biscato - بسكاتو للصناعات الغذائية">Biscato - بسكاتو للصناعات الغذائية</option>
+                    <option value="Blend">Blend</option>
+                    <option value="Bloom Food">Bloom Food</option>
+                    <option value="Bomplast">Bomplast</option>
+                    <option value="Bon Yamane">Bon Yamane</option>
+                    <option value="Bostany">Bostany</option>
+                    <option value="Bubblzz">Bubblzz</option>
+                    <option value="cairo collective">cairo collective</option>
+                    <option value="Cantu">Cantu</option>
+                    <option value="Capixy">Capixy</option>
+                    <option value="Cartona">Cartona</option>
+                    <option value="Chefy Mix">Chefy Mix</option>
+                    <option value="chefy mix">chefy mix</option>
+                    <option value="Chipsy">Chipsy</option>
+                    <option value="Class A">Class A</option>
+                    <option value="Clorox">Clorox</option>
+                    <option value="Coca Cola">Coca Cola</option>
+                    <option value="Cook's">Cook's</option>
+                    <option value="Corona شركة الاسكندرية للحلويات و الشوكولاته">Corona شركة الاسكندرية للحلويات و الشوكولاته</option>
+                    <option value="cosmo care">cosmo care</option>
+                    <option value="Cosmocare">Cosmocare</option>
+                    <option value="Daria">Daria</option>
+                    <option value="Dermacy">Dermacy</option>
+                    <option value="Diversey">Diversey</option>
+                    <option value="Dolphin">Dolphin</option>
+                    <option value="Domty">Domty</option>
+                    <option value="Don Canino">Don Canino</option>
+                    <option value="Dozova">Dozova</option>
+                    <option value="DR.M">DR.M</option>
+                    <option value="Dream">Dream</option>
+                    <option value="E Espresso">E Espresso</option>
+                    <option value="Edita">Edita</option>
+                    <option value="Egypt Foods">Egypt Foods</option>
+                    <option value="Egyptian Global-shady diab برايم فلاور ميلز">Egyptian Global-shady diab برايم فلاور ميلز</option>
+                    <option value="Eighteen Plus">Eighteen Plus</option>
+                    <option value="el amin">el amin</option>
+                    <option value="El Amin">El Amin</option>
+                    <option value="EL Amir">EL Amir</option>
+                    <option value="El Dabaa Export">El Dabaa Export</option>
+                    <option value="El Fath CM">El Fath CM</option>
+                    <option value="EL matgar">EL matgar</option>
+                    <option value="El Rashidi El Mizan">El Rashidi El Mizan</option>
+                    <option value="el shamadan - الشمعدان الصناعية">el shamadan - الشمعدان الصناعية</option>
+                    <option value="Elamin">Elamin</option>
+                    <option value="Elano فالى ووتر">Elano فالى ووتر</option>
+                    <option value="eldinmo">eldinmo</option>
+                    <option value="Eldoha">Eldoha</option>
+                    <option value="Elhoda">Elhoda</option>
+                    <option value="elle cosmetics">elle cosmetics</option>
+                    <option value="Elmatgar">Elmatgar</option>
+                    <option value="Elsa3a">Elsa3a</option>
+                    <option value="Elshahin">Elshahin</option>
+                    <option value="Energizer">Energizer</option>
+                    <option value="Essentials">Essentials</option>
+                    <option value="Eva">Eva</option>
+                    <option value="evian">evian</option>
+                    <option value="Evian">Evian</option>
+                    <option value="Favelin">Favelin</option>
+                    <option value="favelin">favelin</option>
+                    <option value="fly group">fly group</option>
+                    <option value="Fly group CM">Fly group CM</option>
+                    <option value="Food Trip">Food Trip</option>
+                    <option value="Foodica">Foodica</option>
+                    <option value="Foody">Foody</option>
+                    <option value="Frida">Frida</option>
+                    <option value="Gallopers">Gallopers</option>
+                    <option value="GK food">GK food</option>
+                    <option value="Globe Health">Globe Health</option>
+                    <option value="Go bites - جو بايتس">Go bites - جو بايتس</option>
+                    <option value="Go Natural">Go Natural</option>
+                    <option value="Goat">Goat</option>
+                    <option value="Golden arrow">Golden arrow</option>
+                    <option value="Gourmet">Gourmet</option>
+                    <option value="Grandy Home">Grandy Home</option>
+                    <option value="Grant trading">Grant trading</option>
+                    <option value="Green Cola">Green Cola</option>
+                    <option value="Hadwa">Hadwa</option>
+                    <option value="hadwa">hadwa</option>
+                    <option value="Haj Arafa">Haj Arafa</option>
+                    <option value="Halo">Halo</option>
+                    <option value="Halwani">Halwani</option>
+                    <option value="Harvest">Harvest</option>
+                    <option value="Healthy Spread">Healthy Spread</option>
+                    <option value="Heinz">Heinz</option>
+                    <option value="Henkel">Henkel</option>
+                    <option value="Hero">Hero</option>
+                    <option value="I Fit">I Fit</option>
+                    <option value="Ibn Sina">Ibn Sina</option>
+                    <option value="ibn sina">ibn sina</option>
+                    <option value="Iconic">Iconic</option>
+                    <option value="iconic - ايكونيك لتجارة التجزئة">iconic - ايكونيك لتجارة التجزئة</option>
+                    <option value="Ideal">Ideal</option>
+                    <option value="Ifco">Ifco</option>
+                    <option value="imtenan">imtenan</option>
+                    <option value="Indomie">Indomie</option>
+                    <option value="Infinty">Infinty</option>
+                    <option value="Intag">Intag</option>
+                    <option value="Iron Mist">Iron Mist</option>
+                    <option value="ISIS">ISIS</option>
+                    <option value="Italiano">Italiano</option>
+                    <option value="Jammies">Jammies</option>
+                    <option value="jevan">jevan</option>
+                    <option value="Jevan">Jevan</option>
+                    <option value="Johnson & Johnson">Johnson & Johnson</option>
+                    <option value="Jolia الشركة العربية المتحدة للصناعات التحويلية (جوليا)">Jolia الشركة العربية المتحدة للصناعات التحويلية (جوليا)</option>
+                    <option value="Joviality">Joviality</option>
+                    <option value="Juhayna">Juhayna</option>
+                    <option value="just fruits">just fruits</option>
+                    <option value="kandeel trade">kandeel trade</option>
+                    <option value="karbon">karbon</option>
+                    <option value="Karbon">Karbon</option>
+                    <option value="karpon">karpon</option>
+                    <option value="kashkol">kashkol</option>
+                    <option value="keep going">keep going</option>
+                    <option value="Keep Going">Keep Going</option>
+                    <option value="Kellogg's">Kellogg's</option>
+                    <option value="Kemet">Kemet</option>
+                    <option value="Kobayti">Kobayti</option>
+                    <option value="kobayty">kobayty</option>
+                    <option value="konoz">konoz</option>
+                    <option value="koueider">koueider</option>
+                    <option value="Koueider">Koueider</option>
+                    <option value="Kydsco">Kydsco</option>
+                    <option value="Lamar">Lamar</option>
+                    <option value="lambada">lambada</option>
+                    <option value="Lamoura">Lamoura</option>
+                    <option value="lamoura">lamoura</option>
+                    <option value="Lanalou">Lanalou</option>
+                    <option value="Limitless">Limitless</option>
+                    <option value="Linah Farms">Linah Farms</option>
+                    <option value="LINAH FARMS">LINAH FARMS</option>
+                    <option value="Lipton">Lipton</option>
+                    <option value="Lite Bite">Lite Bite</option>
+                    <option value="Locken">Locken</option>
+                    <option value="Loglam">Loglam</option>
+                    <option value="Lord">Lord</option>
+                    <option value="L'Oreal CM">L'Oreal CM</option>
+                    <option value="Lotus Foods">Lotus Foods</option>
+                    <option value="Ludwick">Ludwick</option>
+                    <option value="Luff Your Skin">Luff Your Skin</option>
+                    <option value="luna">luna</option>
+                    <option value="Lychee">Lychee</option>
+                    <option value="Mansour nutella">Mansour nutella</option>
+                    <option value="Mansour المنصور للتجارة و التوزيع (Sunshine)">Mansour المنصور للتجارة و التوزيع (Sunshine)</option>
+                    <option value="Mars">Mars</option>
+                    <option value="Mass Trade">Mass Trade</option>
+                    <option value="Mawasem">Mawasem</option>
+                    <option value="mawasem">mawasem</option>
+                    <option value="Mazaya">Mazaya</option>
+                    <option value="MD Inaustries">MD Inaustries</option>
+                    <option value="mdesign - مسك للاستيراد والتصدير">mdesign - مسك للاستيراد والتصدير</option>
+                    <option value="Mediterraneo CM">Mediterraneo CM</option>
+                    <option value="Mega Farm">Mega Farm</option>
+                    <option value="Mighty Food">Mighty Food</option>
+                    <option value="mmk">mmk</option>
+                    <option value="Mofakera">Mofakera</option>
+                    <option value="Molfix">Molfix</option>
+                    <option value="Mondelez">Mondelez</option>
+                    <option value="Mr Beard">Mr Beard</option>
+                    <option value="Nabolsy">Nabolsy</option>
+                    <option value="Naturesta">Naturesta</option>
+                    <option value="Nestle">Nestle</option>
+                    <option value="Nestle water">Nestle water</option>
+                    <option value="Next Eage">Next Eage</option>
+                    <option value="Next edge">Next edge</option>
+                    <option value="next edge">next edge</option>
+                    <option value="Next Edge Group">Next Edge Group</option>
+                    <option value="next edge group">next edge group</option>
+                    <option value="Nilco">Nilco</option>
+                    <option value="Nile Garden">Nile Garden</option>
+                    <option value="Nivea">Nivea</option>
+                    <option value="Norshek">Norshek</option>
+                    <option value="Nspired">Nspired</option>
+                    <option value="Nuit">Nuit</option>
+                    <option value="nuit">nuit</option>
+                    <option value="oeats">oeats</option>
+                    <option value="okarama">okarama</option>
+                    <option value="Ola Pharmacy">Ola Pharmacy</option>
+                    <option value="Ola Pharmcy">Ola Pharmcy</option>
+                    <option value="Om Elkura">Om Elkura</option>
+                    <option value="Otsuka">Otsuka</option>
+                    <option value="otsuka">otsuka</option>
+                    <option value="oven heaven">oven heaven</option>
+                    <option value="Oven Heaven">Oven Heaven</option>
+                    <option value="Own Snacks مارنيز للأغذية">Own Snacks مارنيز للأغذية</option>
+                    <option value="P&G شركة ابو داوود للتوزيع">P&G شركة ابو داوود للتوزيع</option>
+                    <option value="Parkville">Parkville</option>
+                    <option value="pawer">pawer</option>
+                    <option value="penduline">penduline</option>
+                    <option value="Pepsi">Pepsi</option>
+                    <option value="Pet Zone">Pet Zone</option>
+                    <option value="PharmaCruz Medical">PharmaCruz Medical</option>
+                    <option value="pioneers">pioneers</option>
+                    <option value="Plumpy Curls">Plumpy Curls</option>
+                    <option value="primos">primos</option>
+                    <option value="Primo's">Primo's</option>
+                    <option value="Print Plus">Print Plus</option>
+                    <option value="prioms">prioms</option>
+                    <option value="Prisma">Prisma</option>
+                    <option value="Profi kids">Profi kids</option>
+                    <option value="pronto">pronto</option>
+                    <option value="Puvana">Puvana</option>
+                    <option value="quality life">quality life</option>
+                    <option value="Quanta">Quanta</option>
+                    <option value="Quatro">Quatro</option>
+                    <option value="Queen">Queen</option>
+                    <option value="Raw African">Raw African</option>
+                    <option value="Raya">Raya</option>
+                    <option value="rb">rb</option>
+                    <option value="Rb">Rb</option>
+                    <option value="rc cola">rc cola</option>
+                    <option value="Rc cola">Rc cola</option>
+                    <option value="Real">Real</option>
+                    <option value="RED REX">RED REX</option>
+                    <option value="Regina">Regina</option>
+                    <option value="Rehana">Rehana</option>
+                    <option value="rein">rein</option>
+                    <option value="renol">renol</option>
+                    <option value="Renol - رويال كلين للكيماويات">Renol - رويال كلين للكيماويات</option>
+                    <option value="Republic And Co">Republic And Co</option>
+                    <option value="ReQaf">ReQaf</option>
+                    <option value="Rice cake">Rice cake</option>
+                    <option value="RichBake الفيصل للصناعات الغذائية">RichBake الفيصل للصناعات الغذائية</option>
+                    <option value="Roots">Roots</option>
+                    <option value="Rosline">Rosline</option>
+                    <option value="Royal">Royal</option>
+                    <option value="saeeda">saeeda</option>
+                    <option value="sahdy Diab">sahdy Diab</option>
+                    <option value="Sanita">Sanita</option>
+                    <option value="Santariyya">Santariyya</option>
+                    <option value="Savola">Savola</option>
+                    <option value="Sc Johnson ابو داوود للتوريدات ش ذ م م">Sc Johnson ابو داوود للتوريدات ش ذ م م</option>
+                    <option value="Scrunch">Scrunch</option>
+                    <option value="Scrunch لايف سناكس">Scrunch لايف سناكس</option>
+                    <option value="Seco Salt">Seco Salt</option>
+                    <option value="seco salt السعوديه المصريه للاملاح والمعادن سيكو سولت">seco salt السعوديه المصريه للاملاح والمعادن سيكو سولت</option>
+                    <option value="Sedjet">Sedjet</option>
+                    <option value="Sedra">Sedra</option>
+                    <option value="Sephora">Sephora</option>
+                    <option value="Seteen">Seteen</option>
+                    <option value="seteen">seteen</option>
+                    <option value="Shady Diab">Shady Diab</option>
+                    <option value="Shahd">Shahd</option>
+                    <option value="Shahy">Shahy</option>
+                    <option value="sherif pharmacy">sherif pharmacy</option>
+                    <option value="Smart Trade">Smart Trade</option>
+                    <option value="Snack It">Snack It</option>
+                    <option value="Snack it">Snack it</option>
+                    <option value="Snack Land">Snack Land</option>
+                    <option value="Soudanco">Soudanco</option>
+                    <option value="Soul & More">Soul & More</option>
+                    <option value="Spiro Spathis">Spiro Spathis</option>
+                    <option value="steiva">steiva</option>
+                    <option value="Stevia">Stevia</option>
+                    <option value="Supply Cloud">Supply Cloud</option>
+                    <option value="Sweet & Slim">Sweet & Slim</option>
+                    <option value="swifax">swifax</option>
+                    <option value="Swifax">Swifax</option>
+                    <option value="swiza - سويزا للشيكولاته">swiza - سويزا للشيكولاته</option>
+                    <option value="Talha">Talha</option>
+                    <option value="Tanbouli">Tanbouli</option>
+                    <option value="Target">Target</option>
+                    <option value="The Hair Addict">The Hair Addict</option>
+                    <option value="The Mikman">The Mikman</option>
+                    <option value="the milk man">the milk man</option>
+                    <option value="The Milkman">The Milkman</option>
+                    <option value="Tiba Egypt">Tiba Egypt</option>
+                    <option value="Tiba Plast">Tiba Plast</option>
+                    <option value="Toshiba">Toshiba</option>
+                    <option value="Trace">Trace</option>
+                    <option value="Tribu Care">Tribu Care</option>
+                    <option value="trimize">trimize</option>
+                    <option value="turbo">turbo</option>
+                    <option value="Ulker">Ulker</option>
+                    <option value="Unilever">Unilever</option>
+                    <option value="Unilever Food">Unilever Food</option>
+                    <option value="Unvest">Unvest</option>
+                    <option value="Vexlon">Vexlon</option>
+                    <option value="vileda">vileda</option>
+                    <option value="vini">vini</option>
+                    <option value="vini فينى ايجيبت">vini فينى ايجيبت</option>
+                    <option value="vision trade">vision trade</option>
+                    <option value="Wadi food CM">Wadi food CM</option>
+                    <option value="Wags">Wags</option>
+                    <option value="Waritex">Waritex</option>
+                    <option value="Water kind">Water kind</option>
+                    <option value="water kind">water kind</option>
+                    <option value="Weleda">Weleda</option>
+                    <option value="white tissue">white tissue</option>
+                    <option value="Wonders food">Wonders food</option>
+                    <option value="Xo-Dough">Xo-Dough</option>
+                    <option value="yummy food">yummy food</option>
+                    <option value="Yummy food">Yummy food</option>
+                    <option value="ZAT">ZAT</option>
+                    <option value="Zee">Zee</option>
+                    <option value="Zeina">Zeina</option>
+                    <option value="Zeina Hygiene">Zeina Hygiene</option>
+                    <option value="Zpac">Zpac</option>
+                    <option value="الشركة العالمية للادوات المنزلية ايونيبرو - unipro">الشركة العالمية للادوات المنزلية ايونيبرو - unipro</option>
+                    <option value="الفيصل للصناعات الغذائية - Rich Bake">الفيصل للصناعات الغذائية - Rich Bake</option>
+                    <option value="بورسعيد">بورسعيد</option>
+                    <option value="بورسعيد للصناعات الغذائيه والمشروبات">بورسعيد للصناعات الغذائيه والمشروبات</option>
+                    <option value="زاديا ايجيبت للصناعات الغذائيه">زاديا ايجيبت للصناعات الغذائيه</option>
+                    <option value="شركة البردي لصناعة الورق (fine)">شركة البردي لصناعة الورق (fine)</option>
+                    <option value="شلهوب مصر للتجزئه والتوزيع-CHALHOUB EGYPT FOR RETAIL AND DISTRIBUTION LLC">شلهوب مصر للتجزئه والتوزيع-CHALHOUB EGYPT FOR RETAIL AND DISTRIBUTION LLC</option>
+                    <option value="فالي ووتر- Elano">فالي ووتر- Elano</option>
+                    <option value="فلامنكو لتصنيع وتعبئة المواد الغذائية - flamenco">فلامنكو لتصنيع وتعبئة المواد الغذائية - flamenco</option>
+                </select>
+                <select id="receiptDockNumber" class="w-full border border-gray-300 p-3 rounded" required>
+                    <option value="" disabled selected data-i18n="select_dock_placeholder">اختر رصيف (Dock Number)</option>
+                    <option value="1">Dock 1</option>
+                    <option value="2">Dock 2</option>
+                    <option value="3">Dock 3</option>
+                    <option value="4">Dock 4</option>
+                    <option value="5">Dock 5</option>
+                    <option value="6">Dock 6</option>
+                    <option value="7">Dock 7</option>
+                    <option value="8">Dock 8</option>
+                    <option value="9">Dock 9</option>
+                </select>
+                <input type="text" id="receiptPoNumber" data-i18n="po_number_placeholder" placeholder="رقم الفاتورة (PO Number)" class="w-full border border-gray-300 p-3 rounded" required>
+                <select id="receiptTruckType" class="w-full border border-gray-300 p-3 rounded" required>
+                    <option value="" disabled selected data-i18n="truck_type_placeholder">نوع الشاحنة</option>
+                    <option value="Dabaaba" data-i18n="truck_type_pickup">دبابة</option>
+                    <option value="Jumbo" data-i18n="truck_type_jumbo">جامبو</option>
+                    <option value="Trailer" data-i18n="truck_type_tractor">جرار</option>
+                </select>
+                <select id="receiptCategory" class="w-full border border-gray-300 p-3 rounded" required>
+                    <option value="" disabled selected data-i18n="category_placeholder">النوع</option>
+                    <option value="Non Food" data-i18n="non_food">غير الغذائية</option>
+                    <option value="Food" data-i18n="food">غذائية</option>
+                    <option value="Water" data-i18n="water">ماء</option>
+                    <option value="Frozen" data-i18n="frozen">فريز</option>
+                    <option value="Bags" data-i18n="bags">شنط</option>
+                    <option value="Beauty" data-i18n="beauty">مستحضرات تجميل</option>
+                    <option value="Other" data-i18n="other">غير ذلك</option>
+                </select>
+                
+                
+                <button type="submit" id="submitReceiptBtn" data-i18n="send_button" class="w-full bg-green-600 text-white px-6 py-3 rounded font-bold hover:bg-green-700 transition">ارسال</button>
+            </form>
+
+            <!-- Completion Section (shown after Send) -->
+            <div id="completionSection" class="hidden mt-6 pt-6 border-t border-gray-200 space-y-4">
+            <!-- <h3 data-i18n="completion_header" class="text-lg font-bold text-gray-700">الانتهاء من الاستلام</h3>
+                <input type="number" id="receiptTotalItems" data-i18n="total_items_placeholder" placeholder="إجمالي عدد القطع" class="w-full border border-gray-300 p-3 rounded" required>
+                <input type="text" id="receiptCartonNumber" data-i18n="carton_number_placeholder" placeholder="عدد الكراتين" class="w-full border border-gray-300 p-3 rounded" required>
+                <input type="text" id="receiptTruckNumber" data-i18n="truck_number_placeholder" placeholder="عدد الشاحنات" class="w-full border border-gray-300 p-3 rounded" required>
+                <input type="text" id="receiptSKUNumber" data-i18n="sku_number_placeholder" placeholder="عدد الأصناف" class="w-full border border-gray-300 p-3 rounded" required>
+                <input type="text" id="receiptpalletNumber" data-i18n="pallet_number_placeholder" placeholder="عدد الباليت" class="w-full border border-gray-300 p-3 rounded" required>
+                <input type="text" id="receiptComment" data-i18n="comment_placeholder" placeholder="تعليق" class="w-full border border-gray-300 p-3 rounded" required> -->
+                
+                <div class="grid grid-cols-2  gap-4">
+                    <button id="dockOnlyBtn" onclick="completeReceipt('dock_only')" class="bg-yellow-500 text-white px-6 py-3 rounded font-bold hover:bg-yellow-600 transition shadow">
+                         <span data-i18n="dock_empty_btn">الدوك فضي</span> <br><span data-i18n="dock_empty_desc" class="text-xs opacity-80">(أنا لسه مستلم)</span>
+                    </button>
+                    <button id="fullCompleteBtn" onclick="completeReceipt('full')" class="bg-blue-600 text-white px-6 py-3 rounded font-bold hover:bg-blue-700 transition shadow">
+                         <span data-i18n="all_done_btn">الكل خلص</span> <br><span data-i18n="all_done_desc" class="text-xs opacity-80">(الدوك فاضي + أنا متاح)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Job Info (shown when busy) -->
+        <div id="jobInfo" class="hidden bg-blue-50 rounded shadow-lg p-6 border border-blue-200">
+            <h3 data-i18n="current_job_header" class="text-xl font-bold text-blue-800 mb-4 text-center">🔔 الشغل الحالي</h3>
+            <div class="space-y-2 text-right">
+                <div class="bg-white p-3 rounded">
+                    <p data-i18n="dock_label" class="text-sm text-gray-500">الدوك:</p>
+                    <p class="font-bold text-lg text-gray-800" id="currentDock">-</p>
+                </div>
+                <div class="bg-white p-3 rounded">
+                    <p data-i18n="company_label" class="text-sm text-gray-500">الشركة:</p>
+                    <p class="font-bold text-lg text-gray-800" id="currentCompany">-</p>
+                </div>
+                <div class="bg-white p-3 rounded">
+                    <p data-i18n="invoice_label" class="text-sm text-gray-500">رقم الفاتورة:</p>
+                    <p class="font-bold text-lg text-gray-800" id="currentInvoice">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Control Buttons -->
+        <div class="bg-white rounded shadow-lg p-6">
+            <h3 data-i18n="status_control_header" class="text-lg font-bold text-gray-700 mb-4 text-center">التحكم في الحالة</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="toggleBreak('break')" data-i18n="break_btn" class="bg-orange-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-orange-600 transition">
+                    ☕ استراحة
+                </button>
+                <button onclick="toggleBreak('available')" data-i18n="available_btn" class="bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 transition">
+                    ✅ متاح
+                </button>
+            </div>
+        </div>
+
+        <!-- Job Control Buttons (shown when busy) -->
+        <div id="jobControls" class="hidden bg-white rounded shadow-lg p-6">
+            <h3 data-i18n="finish_receipt_header" class="text-lg font-bold text-gray-700 mb-4 text-center">إنهاء الاستلام</h3>
+            <div id="jobButtonsContainer" class="grid gap-4">
+                <!-- Buttons injected via JS based on job state -->
+            </div>
+        </div>
+    </div>
+
+    <script src="./storekeepper.js"></script>
+</body>
+</html>

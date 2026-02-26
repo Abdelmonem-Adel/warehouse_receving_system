@@ -320,6 +320,11 @@ function exportToExcel() {
     }
 }
 
+function importFromExcel() {
+    alert('Soooooon');
+    console.log('Import functionality placeholder');
+}
+
 
 
 setInterval(() => {
@@ -335,3 +340,5 @@ setInterval(() => {
         fetchData();
     }
 }, 10000);
+
+

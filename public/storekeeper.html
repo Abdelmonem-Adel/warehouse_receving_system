@@ -1,146 +1,0 @@
-
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="./images/icons8-storekeeper-96.png">
-    <title>لوحة أمين المخزن</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Cairo', sans-serif; background-color: #f3f4f6; }
-    </style>
-    <script src="js/i18n.js"></script>
-    <script src="js/auth.js"></script>
-</head>
-<body class="p-6">
-    
-    <header class="flex justify-between items-center mb-8 bg-white p-4 rounded shadow">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800"><span data-i18n="welcome_msg">👷 أهلاً، </span><span id="skNameSpan"></span></h1>
-            <p class="text-sm text-gray-500"><span data-i18n="status_label">حالتك الحالية: </span><span id="statusSpan" class="font-bold">...</span></p>
-        </div>
-
-
-        <div class="flex items-center space-x-4">
-            <!-- Language Switcher -->
-            <div class="flex space-x-2">
-                <button onclick="i18n.switchLanguage('ar')" class="px-2 py-1 bg-white border border-gray-300 rounded shadow-sm text-xs font-medium hover:bg-gray-50 transition-colors">
-                    العربية
-                </button>
-                <button onclick="i18n.switchLanguage('en')" class="px-2 py-1 bg-white border border-gray-300 rounded shadow-sm text-xs font-medium hover:bg-gray-50 transition-colors">
-                    English
-                </button>
-            </div>
-
-        <div>
-            <a href="#" onclick="auth.logout()" data-i18n="logout" class="text-red-500 text-sm">تسجيل خروج</a>
-        </div>
-    </header>
-
-    <div class="max-w-2xl mx-auto space-y-6">
-        <!-- Receipt Form -->
-        <div class="bg-white rounded shadow-lg p-6">
-            <h2 data-i18n="open_receipt_title" class="text-2xl font-bold text-gray-700 mb-4 text-center">فتح استلامة</h2>
-            <form id="receiptForm" onsubmit="createReceipt(); return false;" class="space-y-4">
-                <input type="text" id="receiptCompanyName" data-i18n="company_name_placeholder" placeholder="اسم الشركة" class="w-full border border-gray-300 p-3 rounded" required>
-                <select id="receiptDockNumber" class="w-full border border-gray-300 p-3 rounded" required>
-                    <option value="" disabled selected data-i18n="select_dock_placeholder">اختر رصيف (Dock Number)</option>
-                    <option value="1">Dock 1</option>
-                    <option value="2">Dock 2</option>
-                    <option value="3">Dock 3</option>
-                    <option value="4">Dock 4</option>
-                    <option value="5">Dock 5</option>
-                    <option value="6">Dock 6</option>
-                    <option value="7">Dock 7</option>
-                    <option value="8">Dock 8</option>
-                    <option value="9">Dock 9</option>
-                </select>
-                <input type="text" id="receiptPoNumber" data-i18n="po_number_placeholder" placeholder="رقم الفاتورة (PO Number)" class="w-full border border-gray-300 p-3 rounded" required>
-                <select id="receiptTruckType" class="w-full border border-gray-300 p-3 rounded" required>
-                    <option value="" disabled selected data-i18n="truck_type_placeholder">نوع الشاحنة</option>
-                    <option value="Dabaaba" data-i18n="truck_type_pickup">دبابة</option>
-                    <option value="Jumbo" data-i18n="truck_type_jumbo">جامبو</option>
-                    <option value="Trailer" data-i18n="truck_type_tractor">جرار</option>
-                </select>
-                <select id="receiptCategory" class="w-full border border-gray-300 p-3 rounded" required>
-                    <option value="" disabled selected data-i18n="category_placeholder">النوع</option>
-                    <option value="Non Food" data-i18n="non_food">غير الغذائية</option>
-                    <option value="Food" data-i18n="food">غذائية</option>
-                    <option value="Water" data-i18n="water">ماء</option>
-                    <option value="Frozen" data-i18n="frozen">فريز</option>
-                    <option value="Bags" data-i18n="bags">شنط</option>
-                    <option value="Beauty" data-i18n="beauty">مستحضرات تجميل</option>
-                    <option value="Other" data-i18n="other">غير ذلك</option>
-                </select>
-                
-                
-                <button type="submit" id="submitReceiptBtn" data-i18n="send_button" class="w-full bg-green-600 text-white px-6 py-3 rounded font-bold hover:bg-green-700 transition">ارسال</button>
-            </form>
-
-            <!-- Completion Section (shown after Send) -->
-            <div id="completionSection" class="hidden mt-6 pt-6 border-t border-gray-200 space-y-4">
-                <h3 data-i18n="completion_header" class="text-lg font-bold text-gray-700">الانتهاء من الاستلام</h3>
-                <input type="number" id="receiptTotalItems" data-i18n="total_items_placeholder" placeholder="إجمالي عدد القطع" class="w-full border border-gray-300 p-3 rounded" required>
-                <input type="text" id="receiptCartonNumber" data-i18n="carton_number_placeholder" placeholder="عدد الكراتين" class="w-full border border-gray-300 p-3 rounded" required>
-                <input type="text" id="receiptTruckNumber" data-i18n="truck_number_placeholder" placeholder="عدد الشاحنات" class="w-full border border-gray-300 p-3 rounded" required>
-                <input type="text" id="receiptSKUNumber" data-i18n="sku_number_placeholder" placeholder="عدد الأصناف" class="w-full border border-gray-300 p-3 rounded" required>
-                <input type="text" id="receiptpalletNumber" data-i18n="pallet_number_placeholder" placeholder="عدد الباليت" class="w-full border border-gray-300 p-3 rounded" required>
-                <input type="text" id="receiptComment" data-i18n="comment_placeholder" placeholder="تعليق" class="w-full border border-gray-300 p-3 rounded" required>
-                
-                <div class="grid grid-cols-2  gap-4">
-                    <button id="dockOnlyBtn" onclick="completeReceipt('dock_only')" class="bg-yellow-500 text-white px-6 py-3 rounded font-bold hover:bg-yellow-600 transition shadow">
-                         <span data-i18n="dock_empty_btn">الدوك فضي</span> <br><span data-i18n="dock_empty_desc" class="text-xs opacity-80">(أنا لسه مستلم)</span>
-                    </button>
-                    <button id="fullCompleteBtn" onclick="completeReceipt('full')" class="bg-blue-600 text-white px-6 py-3 rounded font-bold hover:bg-blue-700 transition shadow">
-                         <span data-i18n="all_done_btn">الكل خلص</span> <br><span data-i18n="all_done_desc" class="text-xs opacity-80">(الدوك فاضي + أنا متاح)</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Current Job Info (shown when busy) -->
-        <div id="jobInfo" class="hidden bg-blue-50 rounded shadow-lg p-6 border border-blue-200">
-            <h3 data-i18n="current_job_header" class="text-xl font-bold text-blue-800 mb-4 text-center">🔔 الشغل الحالي</h3>
-            <div class="space-y-2 text-right">
-                <div class="bg-white p-3 rounded">
-                    <p data-i18n="dock_label" class="text-sm text-gray-500">الدوك:</p>
-                    <p class="font-bold text-lg text-gray-800" id="currentDock">-</p>
-                </div>
-                <div class="bg-white p-3 rounded">
-                    <p data-i18n="company_label" class="text-sm text-gray-500">الشركة:</p>
-                    <p class="font-bold text-lg text-gray-800" id="currentCompany">-</p>
-                </div>
-                <div class="bg-white p-3 rounded">
-                    <p data-i18n="invoice_label" class="text-sm text-gray-500">رقم الفاتورة:</p>
-                    <p class="font-bold text-lg text-gray-800" id="currentInvoice">-</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Status Control Buttons -->
-        <div class="bg-white rounded shadow-lg p-6">
-            <h3 data-i18n="status_control_header" class="text-lg font-bold text-gray-700 mb-4 text-center">التحكم في الحالة</h3>
-            <div class="grid grid-cols-2 gap-4">
-                <button onclick="toggleBreak('break')" data-i18n="break_btn" class="bg-orange-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-orange-600 transition">
-                    ☕ استراحة
-                </button>
-                <button onclick="toggleBreak('available')" data-i18n="available_btn" class="bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 transition">
-                    ✅ متاح
-                </button>
-            </div>
-        </div>
-
-        <!-- Job Control Buttons (shown when busy) -->
-        <div id="jobControls" class="hidden bg-white rounded shadow-lg p-6">
-            <h3 data-i18n="finish_receipt_header" class="text-lg font-bold text-gray-700 mb-4 text-center">إنهاء الاستلام</h3>
-            <div id="jobButtonsContainer" class="grid gap-4">
-                <!-- Buttons injected via JS based on job state -->
-            </div>
-        </div>
-    </div>
-
-    <script src="./storekeepper.js"></script>
-</body>
-</html>

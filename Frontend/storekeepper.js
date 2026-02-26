@@ -68,15 +68,15 @@ function updateUI(sk, job) {
             const itemsInput = document.getElementById('receiptTotalItems');
 
             // Reset visibility
-            dockBtn.classList.add('hidden');
+            dockBtn.classList.remove('hidden'); // Show dock empty button by default
             fullBtn.classList.remove('hidden');
-            itemsInput.classList.remove('hidden');
+            if (itemsInput) itemsInput.classList.remove('hidden');
             fullBtn.innerHTML = `${i18n.t('all_done')} <br><span class="text-xs opacity-80">${i18n.t('dock_empty_sk_busy')}</span>`;
 
             if (job && job.dock) {
                 // If we still have a dock, show BOTH buttons
                 dockBtn.classList.remove('hidden');
-            } else {
+            } else if (job) {
                 // Dock is already released, only show full finish
                 dockBtn.classList.add('hidden');
                 fullBtn.innerHTML = `${i18n.t('finish_receipt')} <br><span class="text-xs opacity-80">${i18n.t('sk_available_now')}</span>`;
@@ -196,15 +196,15 @@ async function completeReceipt(mode) {
         return;
     }
 
-    const totalItems = document.getElementById('receiptTotalItems').value;
-    const cartonNumber = document.getElementById('receiptCartonNumber').value;
-    const truckNumber = document.getElementById('receiptTruckNumber').value;
-    const skuNumber = document.getElementById('receiptSKUNumber').value;
-    const palletNumber = document.getElementById('receiptpalletNumber').value;
-    const comment = document.getElementById('receiptComment').value;
+    const totalItems = document.getElementById('receiptTotalItems')?.value || 0;
+    const cartonNumber = document.getElementById('receiptCartonNumber')?.value || 0;
+    const truckNumber = document.getElementById('receiptTruckNumber')?.value || 1;
+    const skuNumber = document.getElementById('receiptSKUNumber')?.value || 0;
+    const palletNumber = document.getElementById('receiptpalletNumber')?.value || 0;
+    const comment = document.getElementById('receiptComment')?.value || "Auto-completed";
 
     // Validation
-    if (mode === 'full' && (!totalItems || totalItems <= 0 || !comment || comment.trim() === '')) {
+    if (mode === 'full' && (totalItems < 0)) { // Removed strict check for totalItems and comment
         alert(i18n.t('alert_enter_items'));
         return;
     }
@@ -231,12 +231,12 @@ async function completeReceipt(mode) {
             // Reset UI
             if (mode === 'full') {
                 document.getElementById('receiptForm').reset();
-                document.getElementById('receiptTotalItems').value = '';
-                document.getElementById('receiptCartonNumber').value = '';
-                document.getElementById('receiptTruckNumber').value = '';
-                document.getElementById('receiptSKUNumber').value = '';
-                document.getElementById('receiptpalletNumber').value = '';
-                document.getElementById('receiptComment').value = '';
+                document.getElementById('receiptTotalItems') && (document.getElementById('receiptTotalItems').value = '');
+                document.getElementById('receiptCartonNumber') && (document.getElementById('receiptCartonNumber').value = '');
+                document.getElementById('receiptTruckNumber') && (document.getElementById('receiptTruckNumber').value = '');
+                document.getElementById('receiptSKUNumber') && (document.getElementById('receiptSKUNumber').value = '');
+                document.getElementById('receiptpalletNumber') && (document.getElementById('receiptpalletNumber').value = '');
+                document.getElementById('receiptComment') && (document.getElementById('receiptComment').value = '');
                 document.getElementById('completionSection').classList.add('hidden');
                 document.getElementById('submitReceiptBtn').disabled = false;
                 currentReceiptId = null;

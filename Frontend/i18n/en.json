@@ -21,6 +21,7 @@
     "label_to": "To:",
     "search_placeholder": "🔍 Search (Company, SK, PO)...",
     "export_excel": "📥 Export Excel",
+    "import_excel": "📤 Import Excel",
     "sk_title": "Storekeeper Dashboard",
     "welcome_msg": "👷 Welcome, ",
     "status_label": "Your current status: ",
